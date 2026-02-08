@@ -1,7 +1,6 @@
 # BridgEd
 
-**Competency-Based Industrial Placement & Recruitment Filtration System**
----
+## **Competency-Based Industrial Placement & Recruitment Filtration System**
 
 ## Project Description
 
@@ -92,6 +91,7 @@ BridgEd solves this dual-sided problem through:
 ## GitHub Repository
 
 **Repository URL:** [https://github.com/Skomaiya/BridgEd.git](https://github.com/Skomaiya/BridgEd.git)
+**Demo Video URL:** [https://youtu.be/K2aXOtQwGcU](https://youtu.be/K2aXOtQwGcU)
 
 ### Repository Structure
 
@@ -336,6 +336,12 @@ The architecture follows a **RESTful API model** with:
 
 ### Figma Mockups
 
+Figma Mockups
+
+![Mockup 1](Mockup_1.png)
+![Mockup 2](Mockup_2.png)
+![Mockup 3](Mockup_3.png)
+![Mockup 4](Mockup_4.png)
 
 ---
 
