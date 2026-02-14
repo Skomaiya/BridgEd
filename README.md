@@ -91,7 +91,7 @@ BridgEd solves this dual-sided problem through:
 ## GitHub Repository
 
 **Repository URL:** [https://github.com/Skomaiya/BridgEd.git](https://github.com/Skomaiya/BridgEd.git)
-**Demo Video URL:** [https://youtu.be/K2aXOtQwGcU](https://youtu.be/K2aXOtQwGcU)
+**Demo Video URL:** [https://drive.google.com/file/d/1mJAROI9jVYlMn0JuqXF-Y77626ZdmO9F/view?usp=sharing](https://drive.google.com/file/d/1mJAROI9jVYlMn0JuqXF-Y77626ZdmO9F/view?usp=sharing)
 
 ### Repository Structure
 
