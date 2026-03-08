@@ -1,0 +1,24 @@
+# General
+.DS_Store
+Thumbs.db
+*.bak
+*~
+
+# Decoupled Folders
+# We track the folders, but each folder has its own .gitignore for internal junk
+node_modules/
+venv/
+.env
+
+# Testing & Coverage
+.coverage
+.pytest_cache/
+htmlcov/
+
+# Logs
+*.log
+ 
+# Application Artifacts
+bridged-backend/staticfiles/
+bridged-backend/media/
+bridged-frontend/dist/
