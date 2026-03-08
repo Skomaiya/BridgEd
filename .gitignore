@@ -17,8 +17,3 @@ htmlcov/
 
 # Logs
 *.log
- 
-# Application Artifacts
-bridged-backend/staticfiles/
-bridged-backend/media/
-bridged-frontend/dist/
