@@ -287,7 +287,7 @@ Navigate to **http://127.0.0.1:8000/admin** to:
 
 **Three-Tier Web Application Architecture:**
 
-![System Architecture](system_architecture.png)
+![System Architecture](./docs/assets/system_architecture.png)
 
 The architecture follows a **RESTful API model** with:
 
@@ -309,7 +309,7 @@ The architecture follows a **RESTful API model** with:
 
 #### Use Case Diagram
 
-![Use Case Diagram](use_case_final.png)
+![Use Case Diagram](./docs/assets/use_case_final.png)
 
 **Key Use Cases:**
 
@@ -321,7 +321,7 @@ The architecture follows a **RESTful API model** with:
 
 #### Class Diagram
 
-![Class Diagram](class_diagram_final.png)
+![Class Diagram](./docs/assets/class_diagram_final.png)
 
 **Core Classes:**
 
