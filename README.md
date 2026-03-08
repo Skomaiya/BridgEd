@@ -360,39 +360,3 @@ _Comprehensive CV parsing results showing extracted skills, education, and exper
 
 ![Edit Mode](edit_mode.png)
 _Editable fields allowing users to refine parsed data before submission_
-
-## Deployment Plan
-
-### Deployment Architecture
-
-**Production Stack:**
-
-- **Frontend**: Vercel (React/Vite hosting with automatic builds)
-- **Backend**: Render (Django application hosting)
-- **Database**: Render PostgreSQL (Managed database service)
-- **Media Storage**: Render Disk Storage (Resume files)
-
-### Pre-Deployment Checklist
-
-- [ ] All tests passing (unit tests for parsing logic)
-- [ ] Environment variables configured for production
-- [ ] Database migrations tested
-- [ ] SSL certificate configured
-- [ ] Custom domain DNS configured
-- [ ] Static files collected
-- [ ] Debug mode disabled
-- [ ] Allowed hosts configured
-- [ ] CORS origins restricted to production domain
-- [ ] Secret key rotated for production
-- [ ] Media file uploads tested
-- [ ] API endpoints documented
-
----
-
-## Project Details
-
-**Developer:** Samuel Komaiya  
-**Email:** [Email Address](s.komaiya@alustudent.com)  
-**Project Supervisor:** Mr. Simeon Nsabiyumva  
-**Institution:** BSc. Software Engineering Program  
-**Project Year:** January 2026

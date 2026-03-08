@@ -1,0 +1,169 @@
+.register-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: #0f172a;
+}
+
+.register-card {
+  background: #1e293b;
+  border-radius: 16px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 480px;
+  border: 1px solid #334155;
+}
+
+.register-header {
+  margin-bottom: 1.75rem;
+}
+
+.register-title {
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+}
+
+.register-subtitle {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.register-subtitle strong {
+  color: #e2e8f0;
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.register-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.register-field label {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.register-field input[type="text"],
+.register-field input[type="url"],
+.register-field input[type="tel"],
+.register-field input[type="number"],
+.register-field select {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  background: #0f172a;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.register-field input:focus,
+.register-field select:focus {
+  outline: none;
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2);
+}
+
+.register-field select {
+  cursor: pointer;
+}
+
+.register-field-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.register-add-link {
+  padding: 0.4rem 0.75rem;
+  background: transparent;
+  border: 1px solid #475569;
+  color: #94a3b8;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.register-add-link:hover {
+  border-color: #0ea5e9;
+  color: #0ea5e9;
+}
+
+.register-link-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.25rem;
+}
+
+.register-link-type {
+  width: 110px;
+  flex-shrink: 0;
+}
+
+.register-link-url {
+  flex: 1;
+  min-width: 0;
+}
+
+.register-remove-link {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  border-radius: 6px;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.register-remove-link:hover {
+  background: rgba(239, 68, 68, 0.25);
+}
+
+.register-error {
+  padding: 0.75rem 1rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  color: #fca5a5;
+  font-size: 0.9rem;
+}
+
+.register-submit {
+  margin-top: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  background: #facc15;
+  color: #0f172a;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.register-submit:hover:not(:disabled) {
+  background: #fde047;
+  transform: translateY(-1px);
+}
+
+.register-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}

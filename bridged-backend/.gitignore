@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# Django
+.env
+db.sqlite3
+db.sqlite3-journal
+/staticfiles/
+/static/
+/media/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local Test Data
+/test_data/resumes/*
+!/test_data/resumes/.gitkeep
