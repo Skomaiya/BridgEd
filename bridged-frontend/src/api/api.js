@@ -2,7 +2,7 @@ import axios from "axios";
 import { enqueue as offlineQueueEnqueue } from "../utils/offlineQueue";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000/api";
+  import.meta.env.VITE_API_BASE_URL;
 
 // Plain axios for auth — no custom adapter, so login/register always hit the server
 const authClient = axios.create({
