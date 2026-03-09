@@ -72,7 +72,7 @@ const Auth = ({ onLoginSuccess, onRegisterSuccess, onBack, darkMode, toggleDarkM
         setError(
           isOffline
             ? "You're offline. Please connect to a network and try again."
-            : "Cannot reach server. Check that the backend is running (e.g. python manage.py runserver on http://127.0.0.1:8000) and try again."
+            : "Cannot reach server. Please check your connection and try again."
         );
         return;
       }
