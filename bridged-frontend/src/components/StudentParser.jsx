@@ -317,24 +317,6 @@ const StudentParser = ({ user, onComplete, isSignupStep, onBack }) => {
             : 'Upload your CV so we can extract and store your information. Review the summary below, add your LinkedIn and any other links, and edit anything that is not accurate. All of this is saved to your profile and you can update it at any time later.'}
         </p>
       </div>
-      {isSignupStep && (
-        <div className="mb-6 flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={() => onComplete?.()}
-            className="rounded-lg bg-bridged-teal px-4 py-2 text-sm font-semibold text-white hover:opacity-95"
-          >
-            Continue to dashboard
-          </button>
-          <button
-            type="button"
-            onClick={() => onComplete?.()}
-            className="rounded-lg border border-bridged-primary/20 dark:border-bridged-light/20 px-4 py-2 text-sm font-medium text-bridged-primary dark:text-bridged-light hover:bg-bridged-primary/5 dark:hover:bg-bridged-light/5"
-          >
-            Skip for now
-          </button>
-        </div>
-      )}
 
       <div className={cardClass + ' mb-6'}>
         <h2 className="mb-4 text-lg font-semibold text-bridged-primary dark:text-bridged-light">
@@ -634,16 +616,9 @@ const StudentParser = ({ user, onComplete, isSignupStep, onBack }) => {
           <button
             type="button"
             onClick={() => onComplete()}
-            className="rounded-lg bg-bridged-teal px-4 py-2 text-sm font-semibold text-white hover:opacity-95"
+            className="rounded-lg bg-bridged-teal px-6 py-2.5 text-sm font-semibold text-white hover:opacity-95 shadow-lg shadow-bridged-teal/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
           >
             Continue to dashboard
-          </button>
-          <button
-            type="button"
-            onClick={() => onComplete()}
-            className="rounded-lg border border-bridged-primary/20 dark:border-bridged-light/20 px-4 py-2 text-sm font-medium text-bridged-primary dark:text-bridged-light hover:bg-bridged-primary/5 dark:hover:bg-bridged-light/5"
-          >
-            Skip for now
           </button>
         </div>
       )}
