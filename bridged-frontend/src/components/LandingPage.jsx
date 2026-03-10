@@ -19,7 +19,7 @@ const LandingPage = ({ onNavigate, darkMode, toggleDarkMode }) => {
           <img 
             src={darkMode ? '/images/logo-dark.png' : '/images/logo-light.png'} 
             alt="BridgEd" 
-            className="h-9 w-auto object-contain cursor-pointer"
+            className="h-12 w-auto object-contain cursor-pointer transition-transform origin-left scale-[2.5]"
             onClick={() => onNavigate('landing')}
           />
         </div>
@@ -113,11 +113,11 @@ const LandingPage = ({ onNavigate, darkMode, toggleDarkMode }) => {
       <footer className={`border-t py-16 px-6 ${darkMode ? 'border-bridged-teal/20' : 'border-bridged-primary/5'}`}>
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-12">
           <div className="flex flex-col items-center md:items-start gap-4">
-            <div className="flex items-center">
+            <div className="flex items-center h-12">
               <img 
                 src={darkMode ? '/images/logo-dark.png' : '/images/logo-light.png'} 
                 alt="BridgEd" 
-                className="h-8 w-auto object-contain"
+                className="h-12 w-auto object-contain transition-transform origin-center md:origin-left scale-[2.5]"
               />
             </div>
             <p className="text-sm text-bridged-primary/50 dark:text-bridged-light/50 max-w-xs text-center md:text-left">

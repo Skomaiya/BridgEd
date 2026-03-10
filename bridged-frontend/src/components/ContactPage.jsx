@@ -53,7 +53,7 @@ const ContactPage = ({ onNavigate, darkMode, toggleDarkMode, user }) => {
           <img 
             src={darkMode ? '/images/logo-dark.png' : '/images/logo-light.png'} 
             alt="BridgEd" 
-            className="h-9 w-auto object-contain cursor-pointer"
+            className="h-12 w-auto object-contain cursor-pointer transition-transform origin-left scale-[2.5]"
             onClick={() => onNavigate(user ? 'dashboard' : 'landing')}
           />
         </div>

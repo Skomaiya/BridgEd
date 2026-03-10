@@ -161,7 +161,7 @@ const MainLayout = ({ user, onLogout, children, currentPage, onNavigate }) => {
           <img
             src={darkMode ? '/images/logo-dark.png' : '/images/logo-light.png'}
             alt="BridgEd"
-            className="h-9 w-auto object-contain"
+            className="h-12 w-auto object-contain transition-transform origin-left scale-[2.5]"
           />
         </div>
 

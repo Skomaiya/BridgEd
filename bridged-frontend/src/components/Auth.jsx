@@ -102,7 +102,7 @@ const Auth = ({ onLoginSuccess, onRegisterSuccess, onBack, darkMode, toggleDarkM
           <img
             src={darkMode ? '/images/logo-dark.png' : '/images/logo-light.png'}
             alt="BridgEd"
-            className="h-10 w-auto object-contain"
+            className="h-10 w-auto object-contain transition-transform origin-left scale-[2.0]"
           />
           <button
             type="button"
