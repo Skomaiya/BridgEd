@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 const LandingPage = ({ onNavigate, darkMode, toggleDarkMode }) => {
+  const [menuOpen, setMenuOpen] = useState(false);
   const navLinkClass = (active) =>
     `text-sm font-medium transition-colors ${
       active
@@ -12,36 +13,46 @@ const LandingPage = ({ onNavigate, darkMode, toggleDarkMode }) => {
 
   return (
     <div className="min-h-screen bg-bridged-light dark:bg-bridged-primary text-bridged-primary dark:text-bridged-light transition-colors duration-300">
-      <nav className={`flex items-center justify-between px-6 py-4 sticky top-0 z-50 backdrop-blur-md border-b ${
+      <nav className={`sticky top-0 z-50 backdrop-blur-md border-b ${
         darkMode ? 'bg-bridged-primary/90 border-bridged-teal/30' : 'bg-white/90 border-bridged-primary/10'
       }`}>
-        <div className="flex items-center">
-          <img 
-            src={darkMode ? '/images/logo-dark.png' : '/images/logo-light.png'} 
-            alt="BridgEd" 
-            className="h-12 w-auto object-contain cursor-pointer transition-transform origin-left scale-[2.5]"
-            onClick={() => onNavigate('landing')}
-          />
+        <div className="flex items-center justify-between px-4 py-4 sm:px-6">
+          <div className="flex items-center">
+            <img
+              src={darkMode ? '/images/logo-dark.png' : '/images/logo-light.png'}
+              alt="BridgEd"
+              className="h-12 w-auto object-contain cursor-pointer transition-transform origin-left scale-[2.5]"
+              onClick={() => onNavigate('landing')}
+            />
+          </div>
+          <div className="hidden sm:flex items-center gap-6 sm:gap-8">
+            <button onClick={() => onNavigate('landing')} className={navLinkClass(true)}>Home</button>
+            <button onClick={() => onNavigate('about')} className={navLinkClass(false)}>About</button>
+            <button onClick={() => onNavigate('contact')} className={navLinkClass(false)}>Contact</button>
+            <button onClick={toggleDarkMode} className={`rounded-lg p-2 transition-colors ${darkMode ? 'text-bridged-light/80 hover:bg-bridged-light/10' : 'text-bridged-primary/80 hover:bg-bridged-primary/10'}`}>
+              {darkMode ? <i className="fa-solid fa-sun" /> : <i className="fa-solid fa-moon" />}
+            </button>
+            <button onClick={() => onNavigate('auth')} className="px-4 py-2 rounded-lg bg-bridged-teal text-white text-sm font-semibold hover:bg-bridged-teal/90 transition shadow-sm">
+              Sign In / Sign Up
+            </button>
+          </div>
+          <div className="flex sm:hidden items-center gap-2">
+            <button onClick={toggleDarkMode} className={`rounded-lg p-2 transition-colors ${darkMode ? 'text-bridged-light/80 hover:bg-bridged-light/10' : 'text-bridged-primary/80 hover:bg-bridged-primary/10'}`}>
+              {darkMode ? <i className="fa-solid fa-sun" /> : <i className="fa-solid fa-moon" />}
+            </button>
+            <button onClick={() => setMenuOpen(o => !o)} className={`rounded-lg p-2 transition-colors ${darkMode ? 'text-bridged-light hover:bg-bridged-light/10' : 'text-bridged-primary/80 hover:bg-bridged-primary/10'}`} aria-label="Toggle menu">
+              <i className={`fa-solid ${menuOpen ? 'fa-xmark' : 'fa-bars'}`} />
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-6 sm:gap-8">
-          <button onClick={() => onNavigate('landing')} className={navLinkClass(true)}>Home</button>
-          <button onClick={() => onNavigate('about')} className={navLinkClass(false)}>About</button>
-          <button onClick={() => onNavigate('contact')} className={navLinkClass(false)}>Contact</button>
-          <button
-            onClick={toggleDarkMode}
-            className={`rounded-lg p-2 transition-colors ${
-              darkMode ? 'text-bridged-light/80 hover:bg-bridged-light/10' : 'text-bridged-primary/80 hover:bg-bridged-primary/10'
-            }`}
-          >
-            {darkMode ? <i className="fa-solid fa-sun" /> : <i className="fa-solid fa-moon" />}
-          </button>
-          <button 
-            onClick={() => onNavigate('auth')} 
-            className="px-4 py-2 rounded-lg bg-bridged-teal text-white text-sm font-semibold hover:bg-bridged-teal/90 transition shadow-sm"
-          >
-            Sign In / Sign Up
-          </button>
-        </div>
+        {menuOpen && (
+          <div className={`sm:hidden border-t flex flex-col gap-1 px-4 py-3 ${darkMode ? 'bg-bridged-primary border-bridged-teal/20' : 'bg-white border-bridged-primary/10'}`}>
+            <button onClick={() => { onNavigate('landing'); setMenuOpen(false); }} className={navLinkClass(true) + ' py-2 text-left'}>Home</button>
+            <button onClick={() => { onNavigate('about'); setMenuOpen(false); }} className={navLinkClass(false) + ' py-2 text-left'}>About</button>
+            <button onClick={() => { onNavigate('contact'); setMenuOpen(false); }} className={navLinkClass(false) + ' py-2 text-left'}>Contact</button>
+            <button onClick={() => { onNavigate('auth'); setMenuOpen(false); }} className="mt-2 w-full px-4 py-2 rounded-lg bg-bridged-teal text-white text-sm font-semibold hover:bg-bridged-teal/90 transition">Sign In / Sign Up</button>
+          </div>
+        )}
       </nav>
 
       <main>
