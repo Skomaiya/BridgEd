@@ -144,7 +144,14 @@ const AdminDashboard = ({ user, activeTab }) => {
     try {
       const result = await adminAPI.updatePlan(userId, newPlan);
       setStudents(prev => prev.map(stu => 
-        stu.user_id === userId ? { ...stu, student_profile: { ...stu.student_profile, subscription_plan: result.subscription_plan } } : stu
+        stu.user_id === userId ? { 
+          ...stu, 
+          student_profile: { 
+            ...stu.student_profile, 
+            subscription_plan: result.subscription_plan,
+            is_premium_active: result.is_premium_active ?? (result.subscription_plan !== 'free'),
+          } 
+        } : stu
       ));
       showAlert(`Student plan updated to ${result.subscription_plan}.`, 'Success', 'success');
     } catch (err) {
@@ -468,9 +475,13 @@ const AdminDashboard = ({ user, activeTab }) => {
                   <div className="flex-1 space-y-2">
                     <h3 className="text-lg font-bold text-bridged-primary dark:text-bridged-light">
                       {stu.display_name || 'Anonymous Student'}
-                      {stu.is_premium_active && (
-                        <span className="ml-2 px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 text-[10px] font-bold uppercase tracking-tight ring-1 ring-amber-500/20">
-                          Premium
+                      {stu.subscription_plan && stu.subscription_plan !== 'free' && (
+                        <span className={`ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-tight ring-1 ${
+                          stu.subscription_plan === 'premium'
+                            ? 'bg-amber-500/10 text-amber-500 ring-amber-500/20'
+                            : 'bg-bridged-teal/10 text-bridged-teal ring-bridged-teal/20'
+                        }`}>
+                          {stu.subscription_plan.charAt(0).toUpperCase() + stu.subscription_plan.slice(1)}
                         </span>
                       )}
                     </h3>

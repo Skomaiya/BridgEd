@@ -1580,7 +1580,8 @@ class AdminUserViewSet(viewsets.ModelViewSet):
             
         student = user.student_profile
         student.subscription_plan = plan
-        student.save()
+        student.is_premium_active = plan in ('basic', 'premium')
+        student.save(update_fields=['subscription_plan', 'is_premium_active'])
         
         Notification.objects.create(
             user=user,
@@ -1590,7 +1591,8 @@ class AdminUserViewSet(viewsets.ModelViewSet):
         
         return Response({
             'message': f"Student plan updated to '{plan}' successfully",
-            'subscription_plan': student.subscription_plan
+            'subscription_plan': student.subscription_plan,
+            'is_premium_active': student.is_premium_active,
         })
 
     @action(detail=True, methods=['post'], url_path='update-email')
