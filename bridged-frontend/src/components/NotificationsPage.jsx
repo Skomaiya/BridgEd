@@ -23,11 +23,29 @@ const TYPE_META = {
 const getTypeMeta = (type) =>
   TYPE_META[type] ?? { label: type, icon: "fa-bell", color: "text-bridged-primary/40 dark:text-bridged-light/40" };
 
+const PREFS_STORAGE_KEY = 'bridged-notif-prefs';
+
 const NotificationsPage = ({ user, syncNotification }) => {
   const { isOnline } = useNetworkStatus();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const notifPrefs = (() => {
+    const saved = user?.notification_preferences;
+    if (saved && Object.keys(saved).length > 0) return saved;
+    try {
+      const raw = localStorage.getItem(PREFS_STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return {};
+  })();
+
+  const isVisible = (n) => {
+    if (Object.keys(notifPrefs).length === 0) return true;
+    if (notifPrefs[n.type] === false) return false;
+    return true;
+  };
 
   const fetchNotifications = useCallback(() => {
     setLoading(true);
@@ -75,7 +93,7 @@ const NotificationsPage = ({ user, syncNotification }) => {
     unread.forEach((n) => handleMarkRead(n.notification_id));
   };
 
-  const unreadCount = notifications.filter((n) => !n.is_read).length;
+  const unreadCount = notifications.filter((n) => !n.is_read && isVisible(n)).length;
 
   return (
     <div className="min-h-[60vh] w-full px-6 py-8">
@@ -133,7 +151,16 @@ const NotificationsPage = ({ user, syncNotification }) => {
         </div>
       ) : (
         <ul className="space-y-3">
-          {notifications.map((n) => {
+          {notifications.filter(isVisible).length === 0 ? (
+            <div className={cardClass}>
+              <div className="flex flex-col items-center gap-2 py-8 text-center">
+                <i className="fa-regular fa-bell-slash text-3xl text-bridged-primary/30 dark:text-bridged-light/30" aria-hidden />
+                <p className="text-sm text-bridged-primary/60 dark:text-bridged-light/60">
+                  No visible notifications. Some may be hidden by your notification preferences.
+                </p>
+              </div>
+            </div>
+          ) : notifications.filter(isVisible).map((n) => {
             const meta = getTypeMeta(n.type);
             return (
               <li
