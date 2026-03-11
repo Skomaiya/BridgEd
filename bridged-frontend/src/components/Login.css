@@ -38,7 +38,7 @@
   font-size: 2rem;
   font-weight: 700;
   margin: 0 0 8px 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #1F7A8C 0%, #0B1F33 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -76,9 +76,9 @@
 }
 
 .tab-button.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #1F7A8C 0%, #0B1F33 100%);
   color: white;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(31, 122, 140, 0.4);
 }
 
 .login-form {
@@ -111,13 +111,45 @@
 
 .form-group input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #1F7A8C;
   background: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  box-shadow: 0 0 0 3px rgba(31, 122, 140, 0.1);
 }
 
 .form-group input::placeholder {
   color: rgba(255, 255, 255, 0.3);
+}
+
+.password-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.password-wrapper input {
+  padding-right: 48px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: #F4B400;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.3s ease;
+  z-index: 10;
+}
+
+.password-toggle:hover {
+  opacity: 1;
+  color: #1F7A8C;
 }
 
 .form-group input:disabled {
@@ -138,7 +170,7 @@
   padding: 14px;
   border: none;
   border-radius: 12px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #1F7A8C 0%, #0B1F33 100%);
   color: white;
   font-weight: 600;
   font-size: 1rem;
@@ -149,7 +181,7 @@
 
 .submit-button:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 6px 20px rgba(31, 122, 140, 0.4);
 }
 
 .submit-button:active:not(:disabled) {

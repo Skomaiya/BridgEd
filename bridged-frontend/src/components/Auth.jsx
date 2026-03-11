@@ -11,6 +11,8 @@ const Auth = ({ onLoginSuccess, onRegisterSuccess, onBack, darkMode, toggleDarkM
   const [companyName, setCompanyName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showImageFallback, setShowImageFallback] = useState(false);
   const [panelImageExt, setPanelImageExt] = useState('png');
 
@@ -197,38 +199,58 @@ const Auth = ({ onLoginSuccess, onRegisterSuccess, onBack, darkMode, toggleDarkM
 
             <div className="flex flex-col gap-2">
               <label htmlFor="password" title="Password must be at least 8 characters" className="text-sm font-medium text-bridged-primary/70 dark:text-bridged-light/70">Password</label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                disabled={loading}
-                minLength={8}
-                autoComplete={isLogin ? 'current-password' : 'off'}
-                className="rounded-lg border border-bridged-primary/20 dark:border-bridged-light/20 bg-white dark:bg-bridged-primary/80 px-4 py-3 text-bridged-primary dark:text-bridged-light placeholder:opacity-50 focus:border-bridged-teal focus:outline-none focus:ring-2 focus:ring-bridged-teal/20 disabled:opacity-50"
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  disabled={loading}
+                  minLength={8}
+                  autoComplete={isLogin ? 'current-password' : 'off'}
+                  className="w-full rounded-lg border border-bridged-primary/20 dark:border-bridged-light/20 bg-white dark:bg-bridged-primary/80 pl-4 pr-12 py-3 text-bridged-primary dark:text-bridged-light placeholder:opacity-50 focus:border-bridged-teal focus:outline-none focus:ring-2 focus:ring-bridged-teal/20 disabled:opacity-50"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-bridged-accent hover:opacity-80 transition-opacity px-1"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  <i className={`fa-solid ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`} />
+                </button>
+              </div>
             </div>
 
             {!isLogin && (
               <>
                 <div className="flex flex-col gap-2">
                   <label htmlFor="confirmPassword" className="text-sm font-medium text-bridged-primary/70 dark:text-bridged-light/70">Confirm Password</label>
-                  <input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="••••••••"
-                    required
-                    disabled={loading}
-                    minLength={8}
-                    autoComplete="off"
-                    className="rounded-lg border border-bridged-primary/20 dark:border-bridged-light/20 bg-white dark:bg-bridged-primary/80 px-4 py-3 text-bridged-primary dark:text-bridged-light placeholder:opacity-50 focus:border-bridged-teal focus:outline-none focus:ring-2 focus:ring-bridged-teal/20 disabled:opacity-50"
-                  />
+                  <div className="relative">
+                    <input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="••••••••"
+                      required
+                      disabled={loading}
+                      minLength={8}
+                      autoComplete="off"
+                      className="w-full rounded-lg border border-bridged-primary/20 dark:border-bridged-light/20 bg-white dark:bg-bridged-primary/80 pl-4 pr-12 py-3 text-bridged-primary dark:text-bridged-light placeholder:opacity-50 focus:border-bridged-teal focus:outline-none focus:ring-2 focus:ring-bridged-teal/20 disabled:opacity-50"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-bridged-accent hover:opacity-80 transition-opacity px-1"
+                      aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                    >
+                      <i className={`fa-solid ${showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'}`} />
+                    </button>
+                  </div>
                 </div>
                 <div className="mt-1 flex flex-col gap-2">
                   <span className="text-sm font-medium text-bridged-primary/70 dark:text-bridged-light/70">I am a</span>
