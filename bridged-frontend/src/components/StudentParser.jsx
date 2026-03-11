@@ -566,7 +566,24 @@ const StudentParser = ({ user, onComplete, isSignupStep, onBack }) => {
                   {editMode ? (
                     <textarea className={inputClass + ' font-mono text-xs min-h-[120px]'} value={JSON.stringify(ed?.education || [], null, 2)} onChange={(e) => handleJSONChange('education', e.target.value)} rows={6} />
                   ) : (
-                    <pre className="overflow-auto rounded bg-bridged-primary/5 dark:bg-bridged-light/5 p-3 text-xs">{JSON.stringify(pd.education, null, 2)}</pre>
+                    <div className="space-y-3">
+                      {Array.isArray(pd.education) && pd.education.length > 0 ? pd.education.map((edu, i) => (
+                        <div key={i} className="rounded-lg border border-bridged-primary/10 dark:border-bridged-light/10 bg-bridged-primary/5 dark:bg-bridged-light/5 p-3 text-sm">
+                          {(edu.degree || edu.qualification) && <p className="font-semibold text-bridged-primary dark:text-bridged-light">{edu.degree || edu.qualification}</p>}
+                          {(edu.institution || edu.school || edu.university) && <p className="text-bridged-teal text-xs font-medium mt-0.5">{edu.institution || edu.school || edu.university}</p>}
+                          {(edu.field_of_study || edu.field) && <p className="text-bridged-primary/60 dark:text-bridged-light/60 text-xs mt-0.5">{edu.field_of_study || edu.field}</p>}
+                          {(edu.start_date || edu.end_date || edu.graduation_year || edu.year) && (
+                            <p className="text-bridged-primary/50 dark:text-bridged-light/50 text-xs mt-1">
+                              {[edu.start_date, edu.end_date || edu.graduation_year || edu.year].filter(Boolean).join(' – ')}
+                            </p>
+                          )}
+                        </div>
+                      )) : typeof pd.education === 'string' && pd.education ? (
+                        <p className="text-sm text-bridged-primary/70 dark:text-bridged-light/70">{pd.education}</p>
+                      ) : (
+                        <p className="text-sm text-bridged-primary/50 dark:text-bridged-light/50">No education records</p>
+                      )}
+                    </div>
                   )}
                 </div>
               )}
@@ -577,7 +594,31 @@ const StudentParser = ({ user, onComplete, isSignupStep, onBack }) => {
                   {editMode ? (
                     <textarea className={inputClass + ' font-mono text-xs min-h-[140px]'} value={JSON.stringify(ed?.experience || [], null, 2)} onChange={(e) => handleJSONChange('experience', e.target.value)} rows={8} />
                   ) : (
-                    <pre className="overflow-auto rounded bg-bridged-primary/5 dark:bg-bridged-light/5 p-3 text-xs">{JSON.stringify(pd.experience, null, 2)}</pre>
+                    <div className="space-y-3">
+                      {Array.isArray(pd.experience) && pd.experience.length > 0 ? pd.experience.map((exp, i) => (
+                        <div key={i} className="rounded-lg border border-bridged-primary/10 dark:border-bridged-light/10 bg-bridged-primary/5 dark:bg-bridged-light/5 p-3 text-sm">
+                          {(exp.title || exp.role || exp.position) && <p className="font-semibold text-bridged-primary dark:text-bridged-light">{exp.title || exp.role || exp.position}</p>}
+                          {(exp.company || exp.employer || exp.organization) && <p className="text-bridged-teal text-xs font-medium mt-0.5">{exp.company || exp.employer || exp.organization}</p>}
+                          {(exp.start_date || exp.end_date || exp.duration || exp.dates) && (
+                            <p className="text-bridged-primary/50 dark:text-bridged-light/50 text-xs mt-0.5">
+                              {exp.duration || exp.dates || [exp.start_date, exp.end_date].filter(Boolean).join(' – ')}
+                            </p>
+                          )}
+                          {exp.location && <p className="text-bridged-primary/50 dark:text-bridged-light/50 text-xs">{exp.location}</p>}
+                          {(exp.description || exp.responsibilities) && (
+                            <p className="mt-1.5 text-xs text-bridged-primary/70 dark:text-bridged-light/70 leading-relaxed line-clamp-4">
+                              {Array.isArray(exp.description || exp.responsibilities)
+                                ? (exp.description || exp.responsibilities).join('; ')
+                                : (exp.description || exp.responsibilities)}
+                            </p>
+                          )}
+                        </div>
+                      )) : typeof pd.experience === 'string' && pd.experience ? (
+                        <p className="text-sm text-bridged-primary/70 dark:text-bridged-light/70">{pd.experience}</p>
+                      ) : (
+                        <p className="text-sm text-bridged-primary/50 dark:text-bridged-light/50">No experience records</p>
+                      )}
+                    </div>
                   )}
                 </div>
               )}
@@ -588,7 +629,17 @@ const StudentParser = ({ user, onComplete, isSignupStep, onBack }) => {
                   {editMode ? (
                     <textarea className={inputClass + ' font-mono text-xs min-h-[80px]'} value={JSON.stringify(ed?.certifications || [], null, 2)} onChange={(e) => handleJSONChange('certifications', e.target.value)} rows={4} />
                   ) : pd.certifications?.length > 0 ? (
-                    <pre className="overflow-auto rounded bg-bridged-primary/5 dark:bg-bridged-light/5 p-2 text-xs">{JSON.stringify(pd.certifications, null, 2)}</pre>
+                    <ul className="space-y-1.5">
+                      {pd.certifications.map((cert, i) => (
+                        <li key={i} className="flex items-start gap-2 text-sm">
+                          <i className="fa-solid fa-certificate text-bridged-teal mt-0.5 text-xs flex-shrink-0" />
+                          <span className="text-bridged-primary/80 dark:text-bridged-light/80">
+                            {typeof cert === 'string' ? cert : (cert.name || cert.title || cert.certification || JSON.stringify(cert))}
+                            {typeof cert === 'object' && cert.year && <span className="ml-1 text-bridged-primary/50 dark:text-bridged-light/50 text-xs">({cert.year})</span>}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
                   ) : (
                     <p className="text-sm text-bridged-primary/50 dark:text-bridged-light/50">None</p>
                   )}
@@ -601,7 +652,21 @@ const StudentParser = ({ user, onComplete, isSignupStep, onBack }) => {
                   {editMode ? (
                     <textarea className={inputClass + ' font-mono text-xs min-h-[80px]'} value={JSON.stringify(ed?.projects || [], null, 2)} onChange={(e) => handleJSONChange('projects', e.target.value)} rows={4} />
                   ) : pd.projects?.length > 0 ? (
-                    <pre className="overflow-auto rounded bg-bridged-primary/5 dark:bg-bridged-light/5 p-2 text-xs">{JSON.stringify(pd.projects, null, 2)}</pre>
+                    <ul className="space-y-2">
+                      {pd.projects.map((proj, i) => (
+                        <li key={i} className="rounded-lg border border-bridged-primary/10 dark:border-bridged-light/10 bg-bridged-primary/5 dark:bg-bridged-light/5 p-2.5 text-sm">
+                          <p className="font-medium text-bridged-primary dark:text-bridged-light">
+                            {typeof proj === 'string' ? proj : (proj.name || proj.title || 'Project')}
+                          </p>
+                          {typeof proj === 'object' && (proj.description || proj.summary) && (
+                            <p className="mt-0.5 text-xs text-bridged-primary/60 dark:text-bridged-light/60 line-clamp-3">{proj.description || proj.summary}</p>
+                          )}
+                          {typeof proj === 'object' && proj.url && (
+                            <a href={proj.url} target="_blank" rel="noopener noreferrer" className="mt-0.5 text-xs text-bridged-teal hover:underline block">{proj.url}</a>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
                   ) : (
                     <p className="text-sm text-bridged-primary/50 dark:text-bridged-light/50">None</p>
                   )}
