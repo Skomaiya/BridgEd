@@ -10,10 +10,11 @@ Usage:
   python manage.py load_dummy_jobs --replace   # replace existing dummy jobs by title
 """
 
-from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
-from api.models import Employer, Job
+from django.core.management.base import BaseCommand
+
 from api.data.dummy_jobs_data import DUMMY_JOBS
+from api.models import Employer, Job
 
 User = get_user_model()
 
@@ -52,9 +53,13 @@ class Command(BaseCommand):
 
         if replace:
             titles = [j["title"] for j in DUMMY_JOBS]
-            deleted, _ = Job.objects.filter(employer=employer, title__in=titles).delete()
+            deleted, _ = Job.objects.filter(
+                employer=employer, title__in=titles
+            ).delete()
             if deleted:
-                self.stdout.write(self.style.WARNING(f"Replaced {deleted} existing job(s)."))
+                self.stdout.write(
+                    self.style.WARNING(f"Replaced {deleted} existing job(s).")
+                )
 
         created_count = 0
         skipped = 0

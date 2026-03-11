@@ -1,12 +1,14 @@
 import pytest
+
 from services.matching_engine import (
+    MatchingEngine,
+    _match_contract,
+    _match_location,
     _normalize_skill,
     _normalize_skills_list,
-    _match_location,
-    _match_contract,
     _skill_matches,
-    MatchingEngine
 )
+
 
 class TestNormalizeSkill:
     """_normalize_skill maps abbreviations/aliases to canonical form."""
@@ -247,26 +249,44 @@ class TestMatchingEngineFilters:
 
     @pytest.fixture
     def employer(self, db):
-        eu = User.objects.create_user(email="emp@test.com", password="p", role="employer")
+        eu = User.objects.create_user(
+            email="emp@test.com", password="p", role="employer"
+        )
         return Employer.objects.create(user=eu, company_name="Emp")
 
     @pytest.fixture
     def student(self, db):
-        from api.models import User, Student, Resume
-        su = User.objects.create_user(email="stn@test.com", password="p", role="student")
-        s = Student.objects.create(user=su, location="Lagos", contract_preferences=["full-time"])
-        Resume.objects.create(s, parsed_data={"technical_skills": ["Python"]}, status="completed")
+        from api.models import Resume, Student, User
+
+        su = User.objects.create_user(
+            email="stn@test.com", password="p", role="student"
+        )
+        s = Student.objects.create(
+            user=su, location="Lagos", contract_preferences=["full-time"]
+        )
+        Resume.objects.create(
+            s, parsed_data={"technical_skills": ["Python"]}, status="completed"
+        )
         return s
 
     def test_location_filter_fails_mismatched_city(self, db):
         """A non-remote job in a different city yields score=0 and failed_filter='location'."""
-        from api.models import User, Student, Resume, Job, Employer
+        from api.models import Employer, Job, Resume, Student, User
+
         eu = User.objects.create_user(email="e@e.com", password="p", role="employer")
         emp = Employer.objects.create(user=eu, company_name="E")
         su = User.objects.create_user(email="s@s.com", password="p", role="student")
         st = Student.objects.create(user=su, location="Lagos", contract_preferences=[])
-        Resume.objects.create(student=st, parsed_data={"technical_skills": ["Python"]}, status="completed")
-        job = Job.objects.create(employer=emp, title="Job", description="X", required_skills=["Python"], location="Nairobi")
+        Resume.objects.create(
+            student=st, parsed_data={"technical_skills": ["Python"]}, status="completed"
+        )
+        job = Job.objects.create(
+            employer=emp,
+            title="Job",
+            description="X",
+            required_skills=["Python"],
+            location="Nairobi",
+        )
         engine = MatchingEngine()
         result = engine.calculate_match_for_student(st, job)
         assert result["score"] == 0.0
@@ -274,13 +294,25 @@ class TestMatchingEngineFilters:
 
     def test_contract_filter_fails_mismatched_type(self, db):
         """A job with a contract type not in the student's preferences yields score=0 and failed_filter='contract'."""
-        from api.models import User, Student, Resume, Job, Employer
+        from api.models import Employer, Job, Resume, Student, User
+
         eu = User.objects.create_user(email="e2@e.com", password="p", role="employer")
         emp = Employer.objects.create(user=eu, company_name="E2")
         su = User.objects.create_user(email="s2@s.com", password="p", role="student")
-        st = Student.objects.create(user=su, location="Remote", contract_preferences=["full-time"])
-        Resume.objects.create(student=st, parsed_data={"technical_skills": ["Python"]}, status="completed")
-        job = Job.objects.create(employer=emp, title="Job", description="X", required_skills=["Python"], location="Remote", contract_type="internship")
+        st = Student.objects.create(
+            user=su, location="Remote", contract_preferences=["full-time"]
+        )
+        Resume.objects.create(
+            student=st, parsed_data={"technical_skills": ["Python"]}, status="completed"
+        )
+        job = Job.objects.create(
+            employer=emp,
+            title="Job",
+            description="X",
+            required_skills=["Python"],
+            location="Remote",
+            contract_type="internship",
+        )
         engine = MatchingEngine()
         result = engine.calculate_match_for_student(st, job)
         assert result["score"] == 0.0
@@ -288,13 +320,24 @@ class TestMatchingEngineFilters:
 
     def test_remote_job_bypasses_location_filter(self, db):
         """A remote job bypasses the location filter entirely."""
-        from api.models import User, Student, Resume, Job, Employer
+        from api.models import Employer, Job, Resume, Student, User
+
         eu = User.objects.create_user(email="e3@e.com", password="p", role="employer")
         emp = Employer.objects.create(user=eu, company_name="E3")
         su = User.objects.create_user(email="s3@s.com", password="p", role="student")
-        st = Student.objects.create(user=su, location="Cape Town", contract_preferences=[])
-        Resume.objects.create(student=st, parsed_data={"technical_skills": ["Python"]}, status="completed")
-        job = Job.objects.create(employer=emp, title="R Job", description="X", required_skills=["Python"], location="Remote")
+        st = Student.objects.create(
+            user=su, location="Cape Town", contract_preferences=[]
+        )
+        Resume.objects.create(
+            student=st, parsed_data={"technical_skills": ["Python"]}, status="completed"
+        )
+        job = Job.objects.create(
+            employer=emp,
+            title="R Job",
+            description="X",
+            required_skills=["Python"],
+            location="Remote",
+        )
         engine = MatchingEngine()
         result = engine.calculate_match_for_student(st, job)
         assert result.get("failed_filter") is None

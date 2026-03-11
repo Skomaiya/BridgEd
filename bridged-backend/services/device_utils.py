@@ -18,8 +18,13 @@ def _detect_via_torch() -> Tuple[str, dict]:
     """Use PyTorch if available. Returns (device, info)."""
     try:
         import torch
+
         if torch.cuda.is_available():
-            name = torch.cuda.get_device_name(0) if torch.cuda.device_count() else "NVIDIA GPU"
+            name = (
+                torch.cuda.get_device_name(0)
+                if torch.cuda.device_count()
+                else "NVIDIA GPU"
+            )
             count = torch.cuda.device_count()
             return "cuda", {"backend": "torch", "name": name, "device_count": count}
         return "cpu", {"backend": "torch", "reason": "CUDA not available"}
@@ -34,7 +39,11 @@ def _detect_via_nvidia_smi() -> bool:
             ["nvidia-smi"],
             capture_output=True,
             timeout=5,
-            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0) if sys.platform == "win32" else 0,
+            creationflags=(
+                getattr(subprocess, "CREATE_NO_WINDOW", 0)
+                if sys.platform == "win32"
+                else 0
+            ),
         )
         return out.returncode == 0
     except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
@@ -80,7 +89,13 @@ def log_device_info() -> None:
     device, info = get_device_and_info()
     if device == "cuda":
         name = info.get("name", "GPU")
-        logger.info("Device: cuda (%s) — GPU will be used when available (e.g. Ollama uses it automatically).", name)
+        logger.info(
+            "Device: cuda (%s) — GPU will be used when available (e.g. Ollama uses it automatically).",
+            name,
+        )
     else:
         reason = info.get("reason", "no GPU detected")
-        logger.info("Device: cpu (%s). Install PyTorch with CUDA or ensure nvidia-smi sees a GPU to use GPU.", reason)
+        logger.info(
+            "Device: cpu (%s). Install PyTorch with CUDA or ensure nvidia-smi sees a GPU to use GPU.",
+            reason,
+        )

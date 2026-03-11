@@ -331,5 +331,3 @@ The architecture follows a **RESTful API model** with:
 - **Match** - Links Student and Job with compatibility score
 - **Resume** - Contains parsed data (skills, education, experience)
 - **Job** - Contains requirements and skill criteria
-
----

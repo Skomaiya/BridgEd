@@ -9,10 +9,15 @@ The pipeline exposes a single run(file_path) interface for Django views.
 """
 
 import logging
-from typing import Dict, Any
-from .text_extractor import TextExtractor, UnsupportedFileFormatError, TextExtractionError
-from .llm_parser import LLMResumeParser
+from typing import Any, Dict
+
 from .device_utils import log_device_info
+from .llm_parser import LLMResumeParser
+from .text_extractor import (
+    TextExtractionError,
+    TextExtractor,
+    UnsupportedFileFormatError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -20,16 +25,16 @@ logger = logging.getLogger(__name__)
 class PipelineExecutionError(Exception):
     """
     Exception raised when the resume parsing pipeline fails.
-    
+
     This exception wraps any errors that occur during the pipeline execution,
     providing context about which stage failed.
-    
+
     Attributes:
         stage: The pipeline stage where the error occurred ('extraction' or 'parsing')
         file_path: Path to the file being processed
         original_error: The original exception that caused the failure
     """
-    
+
     def __init__(self, stage: str, file_path: str, original_error: Exception):
         self.stage = stage
         self.file_path = file_path
@@ -42,10 +47,10 @@ class PipelineExecutionError(Exception):
 class ResumeParsingPipeline:
     """
     Orchestrate the complete resume/CV parsing workflow.
-    
+
     This class coordinates the multi-step process of extracting and analyzing
     resume data. It provides a single, clean interface for Django views.
-    
+
     Pipeline Stages:
         1. Text Extraction: Convert file (PDF/DOCX/TXT) to raw text
         2. Parsing: LLM extracts structured data (Ollama/Gemini/OpenAI)
@@ -62,13 +67,13 @@ class ResumeParsingPipeline:
     def run(self, file_path: str) -> Dict[str, Any]:
         """
         Execute the complete resume parsing pipeline.
-        
+
         This is the main entry point that Django views should call.
         It orchestrates both extraction and parsing stages.
-        
+
         Args:
             file_path: Absolute path to the uploaded CV/resume file
-            
+
         Returns:
             Dictionary containing all parsed resume data:
             {
@@ -80,7 +85,7 @@ class ResumeParsingPipeline:
                 'experience': List[str],
                 'confidence': float (0.0 to 1.0)
             }
-        
+
         Implementation Flow:
             1. Log pipeline start
             2. STAGE 1: Text Extraction
@@ -95,40 +100,47 @@ class ResumeParsingPipeline:
             5. Handle and log any errors
         """
         logger.info(f"Starting pipeline execution for: {file_path}")
-        
+
         try:
             logger.debug("Stage 1: Extracting text from file")
             text = self.extractor.extract(file_path)
             logger.info(f"Text extraction complete: {len(text)} characters extracted")
-            
+
             if not text or len(text.strip()) < 10:
-                logger.warning(f"Very short text extracted ({len(text)} chars), results may be poor")
-            
+                logger.warning(
+                    f"Very short text extracted ({len(text)} chars), results may be poor"
+                )
+
             logger.debug("Stage 2: Parsing text")
             parsed_data = self.parser.parse(text)
-            
-            technical_count = len(parsed_data.get('technical_skills', []))
-            soft_count = len(parsed_data.get('soft_skills', []))
-            logger.info(f"Parsing complete: {technical_count} technical skills, {soft_count} soft skills found")
-            
+
+            technical_count = len(parsed_data.get("technical_skills", []))
+            soft_count = len(parsed_data.get("soft_skills", []))
+            logger.info(
+                f"Parsing complete: {technical_count} technical skills, {soft_count} soft skills found"
+            )
+
             logger.info(f"Pipeline execution complete for: {file_path}")
-            logger.debug(f"Final confidence score: {parsed_data.get('confidence', 0):.2f}")
-            
+            logger.debug(
+                f"Final confidence score: {parsed_data.get('confidence', 0):.2f}"
+            )
+
             return parsed_data
-            
+
         except (UnsupportedFileFormatError, TextExtractionError) as e:
             logger.error(f"Extraction stage failed: {str(e)}")
             raise
-            
-            logger.error(f"Pipeline execution failed unexpectedly: {str(e)}", exc_info=True)
-            raise PipelineExecutionError('parsing', file_path, e)
+
+            logger.error(
+                f"Pipeline execution failed unexpectedly: {str(e)}", exc_info=True
+            )
+            raise PipelineExecutionError("parsing", file_path, e)
 
     def validate_file(self, file_path: str) -> bool:
         """
         Validate that a file can be processed by the pipeline.
-        
+
         This is a quick pre-check that can be used before calling run()
         to validate file format without actually processing the file.
         """
         return self.extractor.is_supported(file_path)
-

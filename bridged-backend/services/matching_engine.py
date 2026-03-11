@@ -5,13 +5,13 @@ Skill matching supports exact, substring, and synonym variants
 (e.g. "Python 3"/"Python", "JS"/"JavaScript", "ReactJS"/"React").
 """
 
-import re
 import logging
-from typing import List, Set, Tuple, Any, Dict
-
-logger = logging.getLogger(__name__)
+import re
+from typing import Any, Dict, List, Set, Tuple
 
 from .synonyms import SKILL_SYNONYMS
+
+logger = logging.getLogger(__name__)
 
 
 def _normalize_skill(s: str) -> str:
@@ -31,20 +31,22 @@ def _normalize_skills_list(skills) -> List[str]:
     """
     if not skills:
         return []
-    
+
     out = []
     items_to_process = []
-    
+
     if isinstance(skills, str):
         items_to_process.append(skills)
     elif isinstance(skills, (list, tuple, set)):
         items_to_process.extend(skills)
     else:
         items_to_process.append(skills)
-        
+
     for item in items_to_process:
         if isinstance(item, dict):
-            item = (item.get("name") or item.get("skill") or item.get("title") or "").strip()
+            item = (
+                item.get("name") or item.get("skill") or item.get("title") or ""
+            ).strip()
         if item is not None and not isinstance(item, str):
             item = str(item)
         if isinstance(item, str) and item:
@@ -65,30 +67,34 @@ def _match_location(student_location: str, job_location: str) -> bool:
     """
     if not job_location:
         return True
-    
+
     j_loc = job_location.lower().strip()
     if j_loc == "remote":
         return True
-        
+
     if not student_location:
         return False
-        
+
     s_loc = student_location.lower().strip()
     return s_loc in j_loc or j_loc in s_loc
 
 
-def _match_contract(student_contract_preferences: List[str], job_contract_type: str) -> bool:
+def _match_contract(
+    student_contract_preferences: List[str], job_contract_type: str
+) -> bool:
     """
     Check if the job's contract type matches any of the student's preferences.
     If student has no preferences set, we assume they are open to all.
     """
     if not student_contract_preferences:
         return True
-    
+
     if not job_contract_type:
         return True
-        
-    return job_contract_type.lower() in [p.lower() for p in student_contract_preferences]
+
+    return job_contract_type.lower() in [
+        p.lower() for p in student_contract_preferences
+    ]
 
 
 def _skill_matches(job_skill: str, student_skill: str) -> bool:
@@ -127,9 +133,7 @@ def _match_required_to_student(
     for req in required_normalized:
         if not req:
             continue
-        found = any(
-            _skill_matches(req, stu) for stu in student_normalized
-        )
+        found = any(_skill_matches(req, stu) for stu in student_normalized)
         if found:
             matched.add(req)
         else:
@@ -230,17 +234,20 @@ class MatchingEngine:
 
     def calculate_match_for_student(self, student, job) -> Dict[str, Any]:
         """
-        Primary entry point: Checks hard filters (location, contract, dismissal) 
+        Primary entry point: Checks hard filters (location, contract, dismissal)
         before calculating skill score.
         """
         from api.models import Match
-        if Match.objects.filter(student=student, job=job, status='dismissed').exists():
+
+        if Match.objects.filter(student=student, job=job, status="dismissed").exists():
             return {
                 "score": 0.0,
                 "matched_required": [],
                 "matched_nice_to_have": [],
-                "missing_required": [r for r in _normalize_skills_list(job.required_skills) if r],
-                "failed_filter": "dismissed"
+                "missing_required": [
+                    r for r in _normalize_skills_list(job.required_skills) if r
+                ],
+                "failed_filter": "dismissed",
             }
 
         if not _match_location(student.location, job.location):
@@ -248,20 +255,25 @@ class MatchingEngine:
                 "score": 0.0,
                 "matched_required": [],
                 "matched_nice_to_have": [],
-                "missing_required": [r for r in _normalize_skills_list(job.required_skills) if r],
-                "failed_filter": "location"
+                "missing_required": [
+                    r for r in _normalize_skills_list(job.required_skills) if r
+                ],
+                "failed_filter": "location",
             }
-            
+
         if not _match_contract(student.contract_preferences, job.contract_type):
             return {
                 "score": 0.0,
                 "matched_required": [],
                 "matched_nice_to_have": [],
-                "missing_required": [r for r in _normalize_skills_list(job.required_skills) if r],
-                "failed_filter": "contract"
+                "missing_required": [
+                    r for r in _normalize_skills_list(job.required_skills) if r
+                ],
+                "failed_filter": "contract",
             }
 
         from api.models import Resume
+
         try:
             resume = Resume.objects.get(student=student)
             student_skills = _skills_from_parsed_data(resume.parsed_data)
@@ -303,5 +315,5 @@ def _match_response_from_job(job, match_result: Dict[str, Any]) -> Dict[str, Any
             match_result["matched_required"] + match_result["matched_nice_to_have"]
         ),
         "missing_skills": match_result["missing_required"],
-        "failed_filter": match_result.get("failed_filter")
+        "failed_filter": match_result.get("failed_filter"),
     }

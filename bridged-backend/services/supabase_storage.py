@@ -6,7 +6,6 @@ Profile images use a separate bucket. Parsed data continues in PostgreSQL (Djang
 """
 
 import logging
-import os
 from typing import Optional, Tuple
 
 logger = logging.getLogger(__name__)
@@ -16,6 +15,7 @@ def _get_service_key() -> str:
     """Return Supabase service role key (SUPABASE_SERVICE_KEY or SUPABASE_SERVICE_ROLE_KEY)."""
     try:
         from decouple import config
+
         key = config("SUPABASE_SERVICE_KEY", default="")
         if not key:
             key = config("SUPABASE_SERVICE_ROLE_KEY", default="")
@@ -28,6 +28,7 @@ def is_supabase_configured() -> bool:
     """Return True if Supabase URL and service key are set (storage will use Supabase)."""
     try:
         from decouple import config
+
         url = config("SUPABASE_URL", default="")
         key = _get_service_key()
         return bool(url and key)
@@ -39,6 +40,7 @@ def get_bucket_name() -> str:
     """Return the bucket name for resumes (default: resumes)."""
     try:
         from decouple import config
+
         return config("SUPABASE_BUCKET_RESUMES", default="resumes")
     except Exception:
         return "resumes"
@@ -48,6 +50,7 @@ def get_profile_bucket_name() -> str:
     """Return the bucket name for profile images (default: profile-images)."""
     try:
         from decouple import config
+
         return config("SUPABASE_BUCKET_PROFILE_IMAGES", default="profile-images")
     except Exception:
         return "profile-images"
@@ -64,8 +67,8 @@ def upload_resume_file(
         return None, None
 
     try:
-        from supabase import create_client
         from decouple import config
+        from supabase import create_client
     except ImportError:
         logger.error("supabase package not installed; pip install supabase")
         return None, None
@@ -102,8 +105,8 @@ def delete_resume_file(storage_path: str) -> bool:
         return True
 
     try:
-        from supabase import create_client
         from decouple import config
+        from supabase import create_client
 
         client = create_client(config("SUPABASE_URL"), _get_service_key())
         bucket = get_bucket_name()
@@ -118,16 +121,20 @@ def delete_resume_file(storage_path: str) -> bool:
 def create_signed_resume_url(storage_path: str, expires_in: int = 3600) -> str | None:
     """Generate a time-limited signed URL for a resume file stored in Supabase."""
     if not is_supabase_configured() or not storage_path:
-        logger.warning("Supabase not configured or no storage_path; cannot create signed URL")
+        logger.warning(
+            "Supabase not configured or no storage_path; cannot create signed URL"
+        )
         return None
 
     try:
-        from supabase import create_client
         from decouple import config
+        from supabase import create_client
 
         client = create_client(config("SUPABASE_URL"), _get_service_key())
         bucket = get_bucket_name()
-        result = client.storage.from_(bucket).create_signed_url(storage_path, expires_in)
+        result = client.storage.from_(bucket).create_signed_url(
+            storage_path, expires_in
+        )
         signed_url = (
             result.get("signedURL")
             or result.get("signedUrl")
@@ -135,7 +142,9 @@ def create_signed_resume_url(storage_path: str, expires_in: int = 3600) -> str |
             or (result.get("data") or {}).get("signedUrl")
         )
         if signed_url:
-            logger.info(f"Created signed URL for: {storage_path} (expires in {expires_in}s)")
+            logger.info(
+                f"Created signed URL for: {storage_path} (expires in {expires_in}s)"
+            )
             return signed_url
         logger.warning(f"Supabase signed URL response missing key: {result}")
         return None
@@ -155,8 +164,8 @@ def upload_profile_image(
         return None, None
 
     try:
-        from supabase import create_client
         from decouple import config
+        from supabase import create_client
     except ImportError:
         logger.error("supabase package not installed; pip install supabase")
         return None, None
@@ -185,14 +194,14 @@ def upload_profile_image(
         return None, None
 
 
-
 def delete_profile_image(storage_path: str) -> bool:
     """Delete a profile image from Supabase Storage by its storage path."""
     if not is_supabase_configured() or not storage_path:
         return True
     try:
-        from supabase import create_client
         from decouple import config
+        from supabase import create_client
+
         client = create_client(config("SUPABASE_URL"), _get_service_key())
         bucket = get_profile_bucket_name()
         client.storage.from_(bucket).remove([storage_path])

@@ -4,10 +4,12 @@ Provides administrative functions like deleting users from Supabase Auth.
 """
 
 import logging
+
 from decouple import config
-from supabase import create_client, Client
+from supabase import Client, create_client
 
 logger = logging.getLogger(__name__)
+
 
 def _get_supabase_client() -> Client:
     """Initialize and return the Supabase admin client."""
@@ -15,19 +17,20 @@ def _get_supabase_client() -> Client:
     key = config("SUPABASE_SERVICE_KEY", default="")
     if not key:
         key = config("SUPABASE_SERVICE_ROLE_KEY", default="")
-    
+
     if not url or not key:
         raise ValueError("Supabase URL or Service Key not configured.")
-        
+
     return create_client(url, key)
+
 
 def delete_supabase_user(user_id: str) -> bool:
     """
     Delete a user from Supabase Auth by their UUID.
-    
+
     Args:
         user_id: The UUID of the user in Supabase.
-        
+
     Returns:
         True if successful or if user doesn't exist, False otherwise.
     """
@@ -38,7 +41,9 @@ def delete_supabase_user(user_id: str) -> bool:
         return True
     except Exception as e:
         if "User not found" in str(e):
-            logger.info(f"User {user_id} not found in Supabase Auth, skipping deletion.")
+            logger.info(
+                f"User {user_id} not found in Supabase Auth, skipping deletion."
+            )
             return True
         logger.error(f"Failed to delete user {user_id} from Supabase Auth: {e}")
         return False

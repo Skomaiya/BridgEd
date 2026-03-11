@@ -21,7 +21,6 @@ SKILL_SYNONYMS = {
     "c plus plus": "cpp",
     ".net": "dotnet",
     "dotnet core": "dotnet",
-    
     # Frontend Frameworks & Tech
     "react.js": "react",
     "reactjs": "react",
@@ -37,7 +36,6 @@ SKILL_SYNONYMS = {
     "sass": "scss",
     "tailwindcss": "tailwind",
     "tailwind css": "tailwind",
-    
     # Backend Frameworks
     "node": "node.js",
     "nodejs": "node.js",
@@ -49,7 +47,6 @@ SKILL_SYNONYMS = {
     "django": "django",
     "ror": "ruby on rails",
     "rails": "ruby on rails",
-    
     # Cloud & DevOps
     "aws": "amazon web services",
     "amazon": "amazon web services",
@@ -64,7 +61,6 @@ SKILL_SYNONYMS = {
     "k8s": "kubernetes",
     "kube": "kubernetes",
     "containerization": "docker",
-    
     # Databases
     "postgres": "postgresql",
     "postgre": "postgresql",
@@ -73,7 +69,6 @@ SKILL_SYNONYMS = {
     "mongo": "mongodb",
     "nosql": "nosql",
     "redis": "redis",
-    
     # Mobile
     "rn": "react native",
     "flutter": "flutter",
@@ -81,7 +76,6 @@ SKILL_SYNONYMS = {
     "ios": "ios",
     "kotlin": "kotlin",
     "swift": "swift",
-    
     # AI/ML/Data
     "ml": "machine learning",
     "machine learning": "ml",
@@ -95,7 +89,6 @@ SKILL_SYNONYMS = {
     "computer vision": "cv",
     "dl": "deep learning",
     "deep learning": "dl",
-    
     # Others/General
     "it": "information technology",
     "ict": "information technology",
