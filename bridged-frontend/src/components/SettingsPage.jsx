@@ -648,7 +648,7 @@ export default function SettingsPage({ user, onNavigate }) {
                 type="button"
                 disabled={uploadingCV}
                 onClick={() => onNavigate?.('resume-upload')}
-                className="inline-flex items-center gap-2 rounded-lg border border-bridged-teal/30 px-4 py-2 text-sm text-bridged-teal hover:bg-bridged-teal/10"
+                className="inline-flex items-center gap-2 rounded-lg border border-bridged-teal/30 px-4 py-2 text-sm text-bridged-teal hover:bg-bridged-teal/10 dark:text-bridged-light hover:dark:bg-bridged-light/10"
               >
                 <i className="fa-solid fa-file-arrow-up" aria-hidden />
                 Go to CV upload

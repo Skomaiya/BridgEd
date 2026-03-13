@@ -372,12 +372,12 @@ const ResumeUploader = ({ user, onLogout }) => {
               <input
                 id="file-input"
                 type="file"
-                accept=".pdf,.doc,.docx"
+                accept=".pdf,.docx,.txt"
                 onChange={handleFileChange}
                 style={{ display: 'none' }}
               />
             </label>
-            <p className="file-types">Supports: PDF, DOC, DOCX</p>
+            <p className="file-types">Supports: PDF, TXT, DOCX</p>
           </div>
         </div>
 

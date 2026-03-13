@@ -6,7 +6,7 @@ const PROGRESS_CAP = 90;
 const PROGRESS_TICK_MS = 400;
 const PROGRESS_RAMP_SEC = 25;
 
-const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx', '.txt'];
+const ALLOWED_EXTENSIONS = ['.pdf', '.docx', '.txt'];
 
 const cardClass =
   'rounded-xl border border-bridged-primary/10 dark:border-bridged-light/10 bg-white dark:bg-bridged-primary/30 p-4 text-bridged-primary dark:text-bridged-light';
@@ -66,7 +66,7 @@ const StudentParser = ({ user, onComplete, isSignupStep, onBack }) => {
       ? '.' + file.name.split('.').pop().toLowerCase()
       : '';
     if (!ALLOWED_EXTENSIONS.includes(ext)) {
-      setError('Invalid file type. Only PDF, DOC, DOCX, or TXT are allowed.');
+      setError('Invalid file type. Only PDF, DOCX, or TXT are allowed.');
       return;
     }
     setUploading(true);
@@ -341,12 +341,12 @@ const StudentParser = ({ user, onComplete, isSignupStep, onBack }) => {
             Browse files
             <input
               type="file"
-              accept=".pdf,.doc,.docx,.txt"
+              accept=".pdf,.docx,.txt"
               onChange={handleFileChange}
               className="hidden"
             />
           </label>
-          <p className="mt-2 text-xs text-bridged-primary/50 dark:text-bridged-light/50">PDF, DOC, DOCX, or TXT</p>
+          <p className="mt-2 text-xs text-bridged-primary/50 dark:text-bridged-light/50">PDF, DOCX, or TXT</p>
         </div>
 
         <button
@@ -525,7 +525,7 @@ const StudentParser = ({ user, onComplete, isSignupStep, onBack }) => {
                   ) : (
                     <div className="flex flex-wrap gap-1.5">
                       {pd.technical_skills.map((s, i) => (
-                        <span key={i} className="rounded-full bg-bridged-teal/20 px-2 py-0.5 text-xs text-bridged-teal">{s}</span>
+                        <span key={i} className="rounded-full bg-bridged-primary/15 dark:bg-bridged-light/15 px-2 py-0.5 text-xs">{s}</span>
                       ))}
                     </div>
                   )}
