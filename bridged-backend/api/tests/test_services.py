@@ -1,5 +1,4 @@
 import pytest
-
 from services.matching_engine import (
     MatchingEngine,
     _match_contract,

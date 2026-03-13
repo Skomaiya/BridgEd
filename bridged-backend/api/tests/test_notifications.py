@@ -1,12 +1,10 @@
-from datetime import timedelta
-
 import pytest
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
-
 from api.models import Notification, Student, User
+from datetime import timedelta
 
 
 @pytest.fixture

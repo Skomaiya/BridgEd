@@ -11,15 +11,13 @@ Parsing tests — two levels:
 
 import os
 import sys
+import pytest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-
-import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
-
 from api.models import Resume, Student, User
 
 RESUME_LIST_DIR = Path(__file__).resolve().parent.parent.parent / "test_data/resumes"

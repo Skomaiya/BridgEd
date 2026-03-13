@@ -303,7 +303,7 @@ const JobFormPage = ({ user, jobId, onSuccess, onBack }) => {
         </div>
         <div>
           <label className="mb-1 block text-sm font-medium text-bridged-primary dark:text-bridged-light">
-            Required skills
+            Required skills <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
@@ -311,6 +311,7 @@ const JobFormPage = ({ user, jobId, onSuccess, onBack }) => {
             value={form.required_skills}
             onChange={(e) => handleChange('required_skills', e.target.value)}
             placeholder="Comma-separated, e.g. Python, SQL, React"
+            required
           />
         </div>
         <div>
