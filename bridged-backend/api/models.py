@@ -99,6 +99,7 @@ class Student(models.Model):
         default=0.0, validators=[MinValueValidator(0.0), MaxValueValidator(100.0)]
     )
     contract_preferences = models.JSONField(default=list, blank=True)
+    auto_accept_matches = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

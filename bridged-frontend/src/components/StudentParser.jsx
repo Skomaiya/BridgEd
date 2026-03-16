@@ -199,8 +199,9 @@ const StudentParser = ({ user, onComplete, isSignupStep, onBack }) => {
   const toggleEditMode = async () => {
     if (!editMode && result) {
       const base = JSON.parse(JSON.stringify(result.parsed_data || {}));
+      const structured = initStructuredSections(base);
       setEditedData({
-        ...base,
+        ...structured,
         linkedin_url: base.linkedin_url ?? studentProfile?.linkedin_url ?? '',
         additional_links: Array.isArray(base.additional_links)
           ? base.additional_links
@@ -263,10 +264,145 @@ const StudentParser = ({ user, onComplete, isSignupStep, onBack }) => {
     const arr = value.split(',').map((s) => s.trim()).filter(Boolean);
     setEditedData((prev) => ({ ...prev, [type]: arr }));
   };
-  const handleJSONChange = (field, value) => {
-    try {
-      setEditedData((prev) => ({ ...prev, [field]: JSON.parse(value) }));
-    } catch (_) {}
+
+  const ensureArray = (val) => (Array.isArray(val) ? val : []);
+
+  const initStructuredSections = (base) => {
+    const clone = { ...(base || {}) };
+    clone.education = ensureArray(clone.education).map((edu) => ({
+      degree: edu.degree || edu.qualification || '',
+      field: edu.field || edu.field_of_study || '',
+      institution: edu.institution || edu.school || edu.university || '',
+      location: edu.location || '',
+      start_date: edu.start_date || '',
+      end_date: edu.end_date || edu.graduation_year || '',
+    }));
+    clone.experience = ensureArray(clone.experience).map((exp) => ({
+      title: exp.title || exp.role || exp.position || '',
+      company: exp.company || exp.employer || exp.organization || '',
+      location: exp.location || '',
+      start_date: exp.start_date || '',
+      end_date: exp.end_date || '',
+      responsibilities: Array.isArray(exp.responsibilities || exp.description)
+        ? (exp.responsibilities || exp.description).join('; ')
+        : (exp.responsibilities || exp.description || ''),
+    }));
+    clone.certifications = ensureArray(clone.certifications).map((cert) => {
+      if (typeof cert === 'string') return { name: cert, issuer: '' };
+      return {
+        name: cert.name || cert.title || '',
+        issuer: cert.issuer || cert.provider || '',
+      };
+    });
+    clone.projects = ensureArray(clone.projects).map((proj) => ({
+      name: proj.name || proj.title || '',
+      description: Array.isArray(proj.description)
+        ? proj.description.join('\n')
+        : (proj.description || ''),
+      start_date: proj.start_date || '',
+      end_date: proj.end_date || '',
+    }));
+    return clone;
+  };
+
+  const handleEducationChange = (index, field, value) => {
+    setEditedData((prev) => {
+      const list = [...ensureArray(prev?.education)];
+      if (!list[index]) {
+        list[index] = { degree: '', field: '', institution: '', location: '', start_date: '', end_date: '' };
+      }
+      list[index] = { ...list[index], [field]: value };
+      return { ...prev, education: list };
+    });
+  };
+
+  const addEducation = () => {
+    setEditedData((prev) => ({
+      ...prev,
+      education: [...ensureArray(prev?.education), { degree: '', field: '', institution: '', location: '', start_date: '', end_date: '' }],
+    }));
+  };
+
+  const removeEducation = (index) => {
+    setEditedData((prev) => ({
+      ...prev,
+      education: ensureArray(prev?.education).filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleExperienceChange = (index, field, value) => {
+    setEditedData((prev) => {
+      const list = [...ensureArray(prev?.experience)];
+      if (!list[index]) {
+        list[index] = { title: '', company: '', location: '', start_date: '', end_date: '', responsibilities: '' };
+      }
+      list[index] = { ...list[index], [field]: value };
+      return { ...prev, experience: list };
+    });
+  };
+
+  const addExperience = () => {
+    setEditedData((prev) => ({
+      ...prev,
+      experience: [...ensureArray(prev?.experience), { title: '', company: '', location: '', start_date: '', end_date: '', responsibilities: '' }],
+    }));
+  };
+
+  const removeExperience = (index) => {
+    setEditedData((prev) => ({
+      ...prev,
+      experience: ensureArray(prev?.experience).filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleCertificationChange = (index, field, value) => {
+    setEditedData((prev) => {
+      const list = [...ensureArray(prev?.certifications)];
+      if (!list[index]) {
+        list[index] = { name: '', issuer: '' };
+      }
+      list[index] = { ...list[index], [field]: value };
+      return { ...prev, certifications: list };
+    });
+  };
+
+  const addCertification = () => {
+    setEditedData((prev) => ({
+      ...prev,
+      certifications: [...ensureArray(prev?.certifications), { name: '', issuer: '' }],
+    }));
+  };
+
+  const removeCertification = (index) => {
+    setEditedData((prev) => ({
+      ...prev,
+      certifications: ensureArray(prev?.certifications).filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleProjectChange = (index, field, value) => {
+    setEditedData((prev) => {
+      const list = [...ensureArray(prev?.projects)];
+      if (!list[index]) {
+        list[index] = { name: '', description: '', start_date: '', end_date: '' };
+      }
+      list[index] = { ...list[index], [field]: value };
+      return { ...prev, projects: list };
+    });
+  };
+
+  const addProject = () => {
+    setEditedData((prev) => ({
+      ...prev,
+      projects: [...ensureArray(prev?.projects), { name: '', description: '', start_date: '', end_date: '' }],
+    }));
+  };
+
+  const removeProject = (index) => {
+    setEditedData((prev) => ({
+      ...prev,
+      projects: ensureArray(prev?.projects).filter((_, i) => i !== index),
+    }));
   };
 
   const pd = result?.parsed_data;
@@ -564,7 +700,70 @@ const StudentParser = ({ user, onComplete, isSignupStep, onBack }) => {
                 <div className={cardClass + ' sm:col-span-2'}>
                   <h4 className="mb-2 text-sm font-semibold text-bridged-primary/80 dark:text-bridged-light/80">Education</h4>
                   {editMode ? (
-                    <textarea className={inputClass + ' font-mono text-xs min-h-[120px]'} value={JSON.stringify(ed?.education || [], null, 2)} onChange={(e) => handleJSONChange('education', e.target.value)} rows={6} />
+                    <div className="space-y-3">
+                      {ensureArray(ed?.education).map((edu, i) => (
+                        <div key={i} className="rounded-lg border border-bridged-primary/10 dark:border-bridged-light/10 bg-bridged-primary/5 dark:bg-bridged-light/5 p-3 space-y-2">
+                          <div className="grid gap-2 sm:grid-cols-2">
+                            <input
+                              className={inputClass}
+                              value={edu.degree || ''}
+                              onChange={(e) => handleEducationChange(i, 'degree', e.target.value)}
+                              placeholder="Degree e.g. BSc Computer Science"
+                            />
+                            <input
+                              className={inputClass}
+                              value={edu.institution || ''}
+                              onChange={(e) => handleEducationChange(i, 'institution', e.target.value)}
+                              placeholder="Institution"
+                            />
+                          </div>
+                          <div className="grid gap-2 sm:grid-cols-2">
+                            <input
+                              className={inputClass}
+                              value={edu.field || ''}
+                              onChange={(e) => handleEducationChange(i, 'field', e.target.value)}
+                              placeholder="Field of study"
+                            />
+                            <input
+                              className={inputClass}
+                              value={edu.location || ''}
+                              onChange={(e) => handleEducationChange(i, 'location', e.target.value)}
+                              placeholder="Location"
+                            />
+                          </div>
+                          <div className="grid gap-2 sm:grid-cols-2">
+                            <input
+                              className={inputClass}
+                              value={edu.start_date || ''}
+                              onChange={(e) => handleEducationChange(i, 'start_date', e.target.value)}
+                              placeholder="Start date"
+                            />
+                            <input
+                              className={inputClass}
+                              value={edu.end_date || ''}
+                              onChange={(e) => handleEducationChange(i, 'end_date', e.target.value)}
+                              placeholder="End date"
+                            />
+                          </div>
+                          <div className="flex justify-end">
+                            <button
+                              type="button"
+                              onClick={() => removeEducation(i)}
+                              className="rounded-lg border border-red-500/30 px-3 py-1.5 text-xs text-red-600 dark:text-red-400 hover:bg-red-500/10"
+                            >
+                              Remove education
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={addEducation}
+                        className="mt-1 inline-flex items-center gap-1.5 rounded-lg border border-bridged-teal/40 bg-bridged-teal/10 px-3 py-1.5 text-xs font-medium text-bridged-teal hover:bg-bridged-teal/20"
+                      >
+                        <i className="fa-solid fa-plus" aria-hidden /> Add education
+                      </button>
+                    </div>
                   ) : (
                     <div className="space-y-3">
                       {Array.isArray(pd.education) && pd.education.length > 0 ? pd.education.map((edu, i) => (
@@ -592,7 +791,72 @@ const StudentParser = ({ user, onComplete, isSignupStep, onBack }) => {
                 <div className={cardClass + ' sm:col-span-2'}>
                   <h4 className="mb-2 text-sm font-semibold text-bridged-primary/80 dark:text-bridged-light/80">Experience</h4>
                   {editMode ? (
-                    <textarea className={inputClass + ' font-mono text-xs min-h-[140px]'} value={JSON.stringify(ed?.experience || [], null, 2)} onChange={(e) => handleJSONChange('experience', e.target.value)} rows={8} />
+                    <div className="space-y-3">
+                      {ensureArray(ed?.experience).map((exp, i) => (
+                        <div key={i} className="rounded-lg border border-bridged-primary/10 dark:border-bridged-light/10 bg-bridged-primary/5 dark:bg-bridged-light/5 p-3 space-y-2">
+                          <div className="grid gap-2 sm:grid-cols-2">
+                            <input
+                              className={inputClass}
+                              value={exp.title || ''}
+                              onChange={(e) => handleExperienceChange(i, 'title', e.target.value)}
+                              placeholder="Job title"
+                            />
+                            <input
+                              className={inputClass}
+                              value={exp.company || ''}
+                              onChange={(e) => handleExperienceChange(i, 'company', e.target.value)}
+                              placeholder="Company"
+                            />
+                          </div>
+                          <div className="grid gap-2 sm:grid-cols-2">
+                            <input
+                              className={inputClass}
+                              value={exp.location || ''}
+                              onChange={(e) => handleExperienceChange(i, 'location', e.target.value)}
+                              placeholder="Location"
+                            />
+                            <div className="grid grid-cols-2 gap-2">
+                              <input
+                                className={inputClass}
+                                value={exp.start_date || ''}
+                                onChange={(e) => handleExperienceChange(i, 'start_date', e.target.value)}
+                                placeholder="Start date"
+                              />
+                              <input
+                                className={inputClass}
+                                value={exp.end_date || ''}
+                                onChange={(e) => handleExperienceChange(i, 'end_date', e.target.value)}
+                                placeholder="End date"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <textarea
+                              className={inputClass + ' min-h-[80px]'}
+                              value={exp.responsibilities || ''}
+                              onChange={(e) => handleExperienceChange(i, 'responsibilities', e.target.value)}
+                              placeholder="Responsibilities or key achievements"
+                            />
+                          </div>
+                          <div className="flex justify-end">
+                            <button
+                              type="button"
+                              onClick={() => removeExperience(i)}
+                              className="rounded-lg border border-red-500/30 px-3 py-1.5 text-xs text-red-600 dark:text-red-400 hover:bg-red-500/10"
+                            >
+                              Remove experience
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={addExperience}
+                        className="mt-1 inline-flex items-center gap-1.5 rounded-lg border border-bridged-teal/40 bg-bridged-teal/10 px-3 py-1.5 text-xs font-medium text-bridged-teal hover:bg-bridged-teal/20"
+                      >
+                        <i className="fa-solid fa-plus" aria-hidden /> Add experience
+                      </button>
+                    </div>
                   ) : (
                     <div className="space-y-3">
                       {Array.isArray(pd.experience) && pd.experience.length > 0 ? pd.experience.map((exp, i) => (
@@ -627,7 +891,46 @@ const StudentParser = ({ user, onComplete, isSignupStep, onBack }) => {
                 <div className={cardClass}>
                   <h4 className="mb-2 text-sm font-semibold text-bridged-primary/80 dark:text-bridged-light/80">Certifications</h4>
                   {editMode ? (
-                    <textarea className={inputClass + ' font-mono text-xs min-h-[80px]'} value={JSON.stringify(ed?.certifications || [], null, 2)} onChange={(e) => handleJSONChange('certifications', e.target.value)} rows={4} />
+                    <div className="space-y-3">
+                      {ensureArray(ed?.certifications).map((cert, i) => (
+                        <div key={i} className="grid gap-2 sm:grid-cols-2 items-end">
+                          <div>
+                            <label className="block text-xs font-medium text-bridged-primary/70 dark:text-bridged-light/70 mb-1">Name</label>
+                            <input
+                              className={inputClass}
+                              value={cert.name || ''}
+                              onChange={(e) => handleCertificationChange(i, 'name', e.target.value)}
+                              placeholder="Certification name"
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <div className="flex-1">
+                              <label className="block text-xs font-medium text-bridged-primary/70 dark:text-bridged-light/70 mb-1">Issuer</label>
+                              <input
+                                className={inputClass}
+                                value={cert.issuer || ''}
+                                onChange={(e) => handleCertificationChange(i, 'issuer', e.target.value)}
+                                placeholder="Provider / issuer"
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeCertification(i)}
+                              className="self-end rounded-lg border border-red-500/30 px-3 py-1.5 text-xs text-red-600 dark:text-red-400 hover:bg-red-500/10"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={addCertification}
+                        className="mt-1 inline-flex items-center gap-1.5 rounded-lg border border-bridged-teal/40 bg-bridged-teal/10 px-3 py-1.5 text-xs font-medium text-bridged-teal hover:bg-bridged-teal/20"
+                      >
+                        <i className="fa-solid fa-plus" aria-hidden /> Add certification
+                      </button>
+                    </div>
                   ) : pd.certifications?.length > 0 ? (
                     <ul className="space-y-1.5">
                       {pd.certifications.map((cert, i) => (
@@ -650,7 +953,54 @@ const StudentParser = ({ user, onComplete, isSignupStep, onBack }) => {
                 <div className={cardClass}>
                   <h4 className="mb-2 text-sm font-semibold text-bridged-primary/80 dark:text-bridged-light/80">Projects</h4>
                   {editMode ? (
-                    <textarea className={inputClass + ' font-mono text-xs min-h-[80px]'} value={JSON.stringify(ed?.projects || [], null, 2)} onChange={(e) => handleJSONChange('projects', e.target.value)} rows={4} />
+                    <div className="space-y-3">
+                      {ensureArray(ed?.projects).map((proj, i) => (
+                        <div key={i} className="rounded-lg border border-bridged-primary/10 dark:border-bridged-light/10 bg-bridged-primary/5 dark:bg-bridged-light/5 p-3 space-y-2">
+                          <input
+                            className={inputClass}
+                            value={proj.name || ''}
+                            onChange={(e) => handleProjectChange(i, 'name', e.target.value)}
+                            placeholder="Project name"
+                          />
+                          <textarea
+                            className={inputClass + ' min-h-[80px]'}
+                            value={proj.description || ''}
+                            onChange={(e) => handleProjectChange(i, 'description', e.target.value)}
+                            placeholder="Short description"
+                          />
+                          <div className="grid gap-2 sm:grid-cols-2">
+                            <input
+                              className={inputClass}
+                              value={proj.start_date || ''}
+                              onChange={(e) => handleProjectChange(i, 'start_date', e.target.value)}
+                              placeholder="Start date"
+                            />
+                            <input
+                              className={inputClass}
+                              value={proj.end_date || ''}
+                              onChange={(e) => handleProjectChange(i, 'end_date', e.target.value)}
+                              placeholder="End date"
+                            />
+                          </div>
+                          <div className="flex justify-end">
+                            <button
+                              type="button"
+                              onClick={() => removeProject(i)}
+                              className="rounded-lg border border-red-500/30 px-3 py-1.5 text-xs text-red-600 dark:text-red-400 hover:bg-red-500/10"
+                            >
+                              Remove project
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={addProject}
+                        className="mt-1 inline-flex items-center gap-1.5 rounded-lg border border-bridged-teal/40 bg-bridged-teal/10 px-3 py-1.5 text-xs font-medium text-bridged-teal hover:bg-bridged-teal/20"
+                      >
+                        <i className="fa-solid fa-plus" aria-hidden /> Add project
+                      </button>
+                    </div>
                   ) : pd.projects?.length > 0 ? (
                     <ul className="space-y-2">
                       {pd.projects.map((proj, i) => (

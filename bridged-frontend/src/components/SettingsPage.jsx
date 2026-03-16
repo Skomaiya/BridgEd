@@ -212,6 +212,7 @@ export default function SettingsPage({ user, onNavigate }) {
             linkedin_url: profile?.linkedin_url,
             additional_links: links,
             contract_preferences: contractPreferences,
+            auto_accept_matches: profile?.auto_accept_matches ?? false,
           }
         : {
             company_name: profile?.company_name,
@@ -492,6 +493,31 @@ export default function SettingsPage({ user, onNavigate }) {
                     <p className="mt-1 text-[10px] text-bridged-primary/40 dark:text-bridged-light/40">
                       Select all types of jobs you are interested in.
                     </p>
+                  </div>
+                  <div className="mt-4 rounded-lg border border-bridged-primary/10 dark:border-bridged-light/10 bg-bridged-primary/5 dark:bg-bridged-light/5 px-4 py-3 flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold text-bridged-primary dark:text-bridged-light">
+                        Auto-accept new matches
+                      </p>
+                      <p className="mt-1 text-[11px] text-bridged-primary/70 dark:text-bridged-light/80 max-w-sm">
+                        When turned on, BridgEd will automatically accept new eligible matches for you so employers can immediately view your full profile.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={!!profile?.auto_accept_matches}
+                      onClick={() => handleField('auto_accept_matches', !profile?.auto_accept_matches)}
+                      className={`relative mt-1 flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full transition-colors ${
+                        profile?.auto_accept_matches ? 'bg-bridged-teal' : 'bg-bridged-primary/20 dark:bg-bridged-light/20'
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-0.5 h-6 w-6 rounded-full bg-white text-bridged-teal shadow-md flex items-center justify-center text-[10px] transition-transform ${
+                          profile?.auto_accept_matches ? 'translate-x-5' : 'translate-x-0.5'
+                        }`}
+                      />
+                    </button>
                   </div>
                 </>
               )}

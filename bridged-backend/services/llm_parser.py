@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 CV_EXTRACTION_PROMPT = """Extract from the CV into JSON. Keys: name or full_name, email, phone; technical_skills and tools (array of strings, one per skill); soft_skills (array of strings); education (array of {degree, field, institution, start_date, end_date}); experience (array of {title, company, start_date, end_date, responsibilities}); certifications (array of {name/title, issuer/provider}); projects (array of {name, description}); languages (array of strings). Valid JSON only."""
 
-CV_TEXT_MAX_CHARS = 5000
+CV_TEXT_MAX_CHARS = 7000
 LLM_MAX_TOKENS = 1500
 
 
@@ -200,9 +200,9 @@ def _normalize_parsed(raw: Dict[str, Any]) -> Dict[str, Any]:
     certifications = []
     for item in safe_list(_get_key(raw, "certifications") or []):
         if isinstance(item, dict):
-            cname = safe_str(_get_key(item, "name", "title", "Title")) or (
-                str(item).strip() if item else None
-            )
+            cname = safe_str(
+                _get_key(item, "name", "title", "Title", "name/title")
+            ) or (str(item).strip() if item else None)
             cissuer = safe_str(_get_key(item, "issuer", "provider", "Provider"))
             certifications.append(
                 {"name": cname or str(item).strip(), "issuer": cissuer}
@@ -251,23 +251,30 @@ def _normalize_parsed(raw: Dict[str, Any]) -> Dict[str, Any]:
     projects = []
     for item in safe_list(_get_key(raw, "projects") or []):
         if isinstance(item, dict):
+            name_val = safe_str(_get_key(item, "name", "title", "Title"))
             desc = item.get("description")
             if isinstance(desc, list):
-                description = desc
+                description = [str(d).strip() for d in desc if str(d).strip()]
             elif desc is not None:
-                description = [str(desc).strip()]
+                description = [str(desc).strip()] if str(desc).strip() else []
             else:
                 description = []
+            if not name_val and not description:
+                continue
+            if name_val and name_val.lower() in {"project", "projects"} and not description:
+                continue
             projects.append(
                 {
-                    "name": safe_str(item.get("name")),
+                    "name": name_val,
                     "description": description,
                     "start_date": safe_str(item.get("start_date")),
                     "end_date": safe_str(item.get("end_date")),
                 }
             )
         else:
-            projects.append(item)
+            text = str(item).strip()
+            if text and text.lower() not in {"project", "projects"}:
+                projects.append(text)
 
     name = safe_str(_get_key(raw, "name", "full_name", "full name"))
 

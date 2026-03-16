@@ -26,8 +26,6 @@ def _normalize_skills_list(skills) -> List[str]:
     """
     Turn input into a list of normalized non-empty skill strings.
     Handles: list of strings, list of mixed, single string with commas/semicolons.
-    Ensures that even if a string inside a list contains commas, it gets split.
-    Also handles parenthetical sub-skills: "A (B, C)" -> ["a", "b", "c"].
     """
     if not skills:
         return []
@@ -63,7 +61,6 @@ def _match_location(student_location: str, job_location: str) -> bool:
     """
     Check if student is in a compatible location for the job.
     'Remote' jobs (case-insensitive) match everyone.
-    Otherwise, we do a simple case-insensitive containment check.
     """
     if not job_location:
         return True

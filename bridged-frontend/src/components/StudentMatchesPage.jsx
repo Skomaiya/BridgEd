@@ -94,10 +94,16 @@ const StudentMatchesPage = ({ user, onNavigate }) => {
       .then(() => {
         setMatches((prev) =>
           prev.map((m) =>
-            m.match_id === matchId ? { ...m, student_interested: true } : m,
+            m.match_id === matchId
+              ? { ...m, student_interested: true, student_declined: false }
+              : m,
           ),
         );
-        setDetailMatch(null);
+        setDetailMatch((current) =>
+          current?.match_id === matchId
+            ? { ...current, student_interested: true, student_declined: false }
+            : current,
+        );
       })
       .finally(() => setActionLoading(false));
   };
@@ -293,7 +299,7 @@ const StudentMatchesPage = ({ user, onNavigate }) => {
           aria-labelledby="match-detail-title"
         >
           <div
-            className={`${cardClass} max-h-[90vh] w-full max-w-lg overflow-y-auto`}
+            className={`rounded-xl border border-bridged-primary/10 dark:border-bridged-light/10 bg-white dark:bg-bridged-primary p-4 text-bridged-primary dark:text-bridged-light max-h-[90vh] w-full max-w-lg overflow-y-auto`}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-2">
@@ -418,7 +424,7 @@ const StudentMatchesPage = ({ user, onNavigate }) => {
               {detailMatch.can_accept !== false ? (
                 <button
                   type="button"
-                  disabled={actionLoading || detailMatch.student_interested}
+                  disabled={actionLoading}
                   onClick={() => handleAccept(detailMatch.match_id)}
                   className="rounded-lg bg-bridged-teal px-4 py-2.5 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-50"
                 >
