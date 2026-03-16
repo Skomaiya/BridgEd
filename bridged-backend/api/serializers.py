@@ -186,6 +186,7 @@ class StudentSerializer(serializers.ModelSerializer):
             "display_name",
             "subscription_plan",
             "contract_preferences",
+            "auto_accept_matches",
             "created_at",
             "updated_at",
         ]
@@ -656,3 +657,22 @@ class UserReportSerializer(serializers.ModelSerializer):
         if request and request.user:
             validated_data["reporter"] = request.user
         return super().create(validated_data)
+
+
+class PlatformStatsSerializer(serializers.Serializer):
+    """Serializer for high-level platform statistics used on the landing page."""
+
+    students_joined = serializers.IntegerField()
+    employers_joined = serializers.IntegerField()
+    active_students = serializers.IntegerField()
+    active_employers = serializers.IntegerField()
+    total_matches = serializers.IntegerField()
+
+
+class EmployerMatchStatsSerializer(serializers.Serializer):
+    """Serializer for employer-specific match statistics."""
+
+    total_matches = serializers.IntegerField()
+    accepted_matches = serializers.IntegerField()
+    pending_matches = serializers.IntegerField()
+    declined_matches = serializers.IntegerField()

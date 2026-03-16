@@ -6,7 +6,7 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
 
-from .views import (  # Authentication; Resumes; Profiles; Jobs; Matching; Support; Notifications; Payments; Admin; Messaging; Match management
+from .views import (  # Authentication; Resumes; Profiles; Jobs; Matching; Support; Notifications; Payments; Admin; Messaging; Match management; Public stats
     AdminContactRequestView,
     AdminUserViewSet,
     ContactRequestView,
@@ -16,6 +16,7 @@ from .views import (  # Authentication; Resumes; Profiles; Jobs; Matching; Suppo
     EmployerMatchesView,
     EmployerMatchResumeDownloadView,
     EmployerMatchStudentProfileView,
+    EmployerMatchStatsView,
     EmployerProfilePhotoView,
     EmployerProfileView,
     EmployMatchView,
@@ -33,6 +34,7 @@ from .views import (  # Authentication; Resumes; Profiles; Jobs; Matching; Suppo
     RegisterView,
     ResumeDetailView,
     ResumeUploadView,
+    PlatformStatsView,
     StudentProfilePhotoView,
     StudentProfileView,
     UserProfilePhotoView,
@@ -56,6 +58,8 @@ urlpatterns = [
     path("auth/logout", LogoutView.as_view(), name="logout"),
     path("auth/delete-account", DeleteAccountView.as_view(), name="delete-account"),
     path("auth/token/refresh", TokenRefreshView.as_view(), name="token_refresh"),
+    # Public statistics
+    path("stats/platform", PlatformStatsView.as_view(), name="platform-stats"),
     # Profile endpoints
     path("students/profile", StudentProfileView.as_view(), name="student-profile"),
     path(
@@ -99,6 +103,11 @@ urlpatterns = [
         name="employer-match-resume-download",
     ),
     path("employer/matches", EmployerMatchesView.as_view(), name="employer-matches"),
+    path(
+        "employer/matches/stats",
+        EmployerMatchStatsView.as_view(),
+        name="employer-match-stats",
+    ),
     path("matches/<uuid:pk>/employ/", EmployMatchView.as_view(), name="match-employ"),
     path(
         "matches/<uuid:pk>/dismiss/", DismissMatchView.as_view(), name="match-dismiss"

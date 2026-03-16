@@ -51,6 +51,7 @@ from .serializers import (
     AdminStudentSerializer,
     AdminUserSerializer,
     AuthResponseSerializer,
+    EmployerMatchStatsSerializer,
     ContactRequestSerializer,
     ConversationSerializer,
     EmployerSerializer,
@@ -70,6 +71,7 @@ from .serializers import (
     UserRegistrationSerializer,
     UserReportSerializer,
     UserSerializer,
+    PlatformStatsSerializer,
 )
 
 User = get_user_model()
@@ -227,6 +229,38 @@ class LoginView(APIView):
                 },
             }
         )
+
+
+class PlatformStatsView(APIView):
+    """Public platform statistics for the marketing landing page."""
+
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        responses={200: PlatformStatsSerializer},
+        description=(
+            "High-level platform statistics including counts of students, employers, "
+            "active accounts, and total matches. Intended for public landing page display."
+        ),
+        tags=["Public"],
+    )
+    def get(self, request):
+        students_joined = Student.objects.count()
+        employers_joined = Employer.objects.count()
+        active_students = User.objects.filter(role="student", is_active=True).count()
+        active_employers = User.objects.filter(role="employer", is_active=True).count()
+        total_matches = Match.objects.count()
+
+        serializer = PlatformStatsSerializer(
+            {
+                "students_joined": students_joined,
+                "employers_joined": employers_joined,
+                "active_students": active_students,
+                "active_employers": active_employers,
+                "total_matches": total_matches,
+            }
+        )
+        return Response(serializer.data)
 
 
 class LogoutView(APIView):
@@ -827,7 +861,10 @@ class JobViewSet(viewsets.ModelViewSet):
             remaining_needed = (cap - len(selected_ids)) if cap is not None else None
             qs = (
                 Match.objects.filter(
-                    job=job, compatibility_score__gte=threshold, status__isnull=True
+                    job=job,
+                    compatibility_score__gte=threshold,
+                    status__isnull=True,
+                    student_declined=False,
                 )
                 .exclude(match_id__in=selected_ids)
                 .order_by("-compatibility_score")
@@ -965,6 +1002,35 @@ class MatchView(APIView):
                         else:
                             shortlist_full = False
                         can_accept = not deadline_passed and not shortlist_full
+
+                        if getattr(student, "auto_accept_matches", False) and can_accept:
+                            if not match.student_interested and not match.student_declined:
+                                match.student_interested = True
+                                match.student_declined = False
+                                match.save(update_fields=["student_interested", "student_declined"])
+
+                                student_display = (
+                                    getattr(match.student, "display_name", None)
+                                    or match.student.user.email
+                                )
+                                Notification.objects.create(
+                                    user=match.job.employer.user,
+                                    type="student interested",
+                                    message=(
+                                        f"A student ({student_display}) has automatically accepted their match "
+                                        f"for your position '{job.title}' based on their settings. "
+                                        "Visit Matches to view their profile and download their CV."
+                                    ),
+                                )
+                                Notification.objects.create(
+                                    user=request.user,
+                                    type="interest confirmed",
+                                    message=(
+                                        f"We've automatically accepted your match with '{job.title}' at "
+                                        f"{job.employer.company_name} based on your settings. "
+                                        "The employer has been notified and can now view your profile."
+                                    ),
+                                )
 
                         match_payload = _match_response_from_job(job, match_result)
                         match_payload["match_id"] = str(match.match_id)
@@ -1238,6 +1304,47 @@ class EmployerMatchesView(generics.ListAPIView):
         if page is not None:
             return self.get_paginated_response(out)
         return Response(out)
+
+
+class EmployerMatchStatsView(APIView):
+    """
+    Aggregate match statistics for the current employer across all their jobs
+    or for a specific job when job_id is provided.
+    """
+
+    permission_classes = [IsAuthenticated, IsEmployer]
+
+    @extend_schema(
+        responses={200: EmployerMatchStatsSerializer},
+        description=(
+            "Return total matches for the employer's jobs (or a specific job), "
+            "along with counts of accepted, pending, and declined matches."
+        ),
+        tags=["Employer"],
+    )
+    def get(self, request):
+        qs = Match.objects.filter(job__employer__user=request.user)
+        job_id = request.query_params.get("job_id")
+        if job_id:
+            qs = qs.filter(job_id=job_id)
+        total_matches = qs.count()
+        accepted_matches = qs.filter(
+            student_interested=True, student_declined=False
+        ).count()
+        pending_matches = qs.filter(
+            student_interested=False, student_declined=False
+        ).count()
+        declined_matches = qs.filter(student_declined=True).count()
+
+        serializer = EmployerMatchStatsSerializer(
+            {
+                "total_matches": total_matches,
+                "accepted_matches": accepted_matches,
+                "pending_matches": pending_matches,
+                "declined_matches": declined_matches,
+            }
+        )
+        return Response(serializer.data)
 
 
 class EmployerMatchStudentProfileView(APIView):

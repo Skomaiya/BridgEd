@@ -360,4 +360,11 @@ export const reportsAPI = {
     serverClient.post("/reports/", data).then((r) => r.data),
 };
 
+export const statsAPI = {
+  getPlatformStats: () =>
+    authClient.get("/stats/platform").then((r) => r.data),
+  getEmployerMatchStats: (params = {}) =>
+    serverClient.get("/employer/matches/stats", { params }).then((r) => r.data),
+};
+
 export default serverClient;

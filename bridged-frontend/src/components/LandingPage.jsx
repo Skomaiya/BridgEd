@@ -1,7 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { statsAPI } from '../api/api';
 
 const LandingPage = ({ onNavigate, darkMode, toggleDarkMode }) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [stats, setStats] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(false);
+
   const navLinkClass = (active) =>
     `text-sm font-medium transition-colors ${
       active
@@ -10,6 +14,58 @@ const LandingPage = ({ onNavigate, darkMode, toggleDarkMode }) => {
           ? 'text-bridged-light hover:text-bridged-accent'
           : 'text-bridged-primary hover:text-bridged-teal'
     }`;
+
+  useEffect(() => {
+    let isMounted = true;
+    setStatsLoading(true);
+    statsAPI
+      .getPlatformStats()
+      .then((data) => {
+        if (isMounted) setStats(data);
+      })
+      .catch(() => {
+        if (isMounted) setStats(null);
+      })
+      .finally(() => {
+        if (isMounted) setStatsLoading(false);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const statCards = stats
+    ? [
+        {
+          label: 'Students joined',
+          value: stats.students_joined,
+          icon: 'fa-user-graduate',
+          accentClass: 'text-bridged-teal',
+          bgClass: 'bg-bridged-teal/10',
+        },
+        {
+          label: 'Employers joined',
+          value: stats.employers_joined,
+          icon: 'fa-briefcase',
+          accentClass: 'text-bridged-accent',
+          bgClass: 'bg-bridged-accent/10',
+        },
+        {
+          label: 'Active users',
+          value: (stats.active_students || 0) + (stats.active_employers || 0),
+          icon: 'fa-user-group',
+          accentClass: 'text-green-500',
+          bgClass: 'bg-green-500/10',
+        },
+        {
+          label: 'Matches made',
+          value: stats.total_matches,
+          icon: 'fa-handshake',
+          accentClass: 'text-bridged-accent',
+          bgClass: 'bg-amber-500/10',
+        },
+      ]
+    : [];
 
   return (
     <div className="min-h-screen bg-bridged-light dark:bg-bridged-primary text-bridged-primary dark:text-bridged-light transition-colors duration-300">
@@ -82,7 +138,45 @@ const LandingPage = ({ onNavigate, darkMode, toggleDarkMode }) => {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-6 py-20 grid md:grid-cols-3 gap-8">
+        <div className="max-w-7xl mx-auto px-6 pb-8">
+          <div className="rounded-3xl border border-bridged-primary/5 dark:border-bridged-teal/20 bg-white/80 dark:bg-bridged-primary/60 shadow-sm px-6 py-6 md:px-8 md:py-7 backdrop-blur">
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-bridged-primary/50 dark:text-bridged-light/60">
+              Proven impact
+            </p>
+            <p className="mt-1 mb-5 text-sm text-bridged-primary/70 dark:text-bridged-light/70">
+              Real students and employers already using BridgEd to find the right industrial placements.
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
+              {statsLoading && !stats && (
+                <div className="col-span-2 sm:col-span-4 flex items-center justify-center py-2 text-xs text-bridged-primary/50 dark:text-bridged-light/50">
+                  <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-bridged-teal/30 border-t-bridged-teal" />
+                  Loading live statistics…
+                </div>
+              )}
+              {!statsLoading &&
+                statCards.map((item) => (
+                  <div
+                    key={item.label}
+                    className="rounded-2xl bg-bridged-light/80 dark:bg-bridged-primary/70 border border-bridged-primary/5 dark:border-bridged-teal/25 px-3.5 py-3 flex items-center gap-3 shadow-sm"
+                  >
+                    <div className={`h-9 w-9 rounded-xl flex items-center justify-center ${item.bgClass}`}>
+                      <i className={`fa-solid ${item.icon} ${item.accentClass} text-sm`} />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-bridged-primary/60 dark:text-bridged-light/60">
+                        {item.label}
+                      </span>
+                      <span className="text-lg font-extrabold text-bridged-primary dark:text-bridged-light">
+                        {typeof item.value === 'number' ? item.value.toLocaleString() : '—'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-6 py-16 md:py-20 grid md:grid-cols-3 gap-8">
           {[
             { 
               icon: 'fa-bolt', 

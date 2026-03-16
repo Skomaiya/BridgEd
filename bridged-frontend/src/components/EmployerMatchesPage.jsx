@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { employerAPI, messagesAPI } from '../api/api';
+import { employerAPI, messagesAPI, statsAPI } from '../api/api';
 import ConfirmationModal from './ConfirmationModal';
 import { useNetworkStatus } from '../utils/networkStatus';
 import { getCached, setCached, CACHE_KEYS } from '../utils/offlineCache';
@@ -20,6 +20,7 @@ const EmployerMatchesPage = ({ user, onNavigate }) => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const { showAlert } = useAlert();
+  const [overviewStats, setOverviewStats] = useState(null);
 
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
@@ -155,6 +156,28 @@ const EmployerMatchesPage = ({ user, onNavigate }) => {
     fetchMatches();
   }, [isOnline, page, selectedJobId]);
 
+  useEffect(() => {
+    if (!isOnline) {
+      setOverviewStats(null);
+      return;
+    }
+
+    let isMounted = true;
+    const params = selectedJobId ? { job_id: selectedJobId } : {};
+
+    statsAPI
+      .getEmployerMatchStats(params)
+      .then((data) => {
+        if (isMounted) setOverviewStats(data);
+      })
+      .catch(() => {
+        if (isMounted) setOverviewStats(null);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [isOnline, selectedJobId]);
+
   const jobsMap = {};
   matches.forEach((m) => {
     const jid = m.job?.job_id;
@@ -177,9 +200,59 @@ const EmployerMatchesPage = ({ user, onNavigate }) => {
       <h1 className="mb-2 text-xl font-semibold text-bridged-primary dark:text-bridged-light">
         Matches
       </h1>
-      <p className="mb-8 text-sm text-bridged-primary/70 dark:text-bridged-light/70">
-        Students matched to your jobs. Identify is shown once they accept the match.
+      <p className="mb-4 text-sm text-bridged-primary/70 dark:text-bridged-light/70">
+        Students matched to your jobs. Identity is shown once they accept the match.
       </p>
+
+      {overviewStats && (
+      <div className="mb-6 rounded-2xl border border-bridged-primary/10 dark:border-bridged-light/10 bg-white/90 dark:bg-bridged-primary/40 px-4 py-4 sm:px-5 sm:py-4 shadow-sm">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-bridged-primary/50 dark:text-bridged-light/60">
+              <i className="fa-solid fa-chart-line text-bridged-teal" />
+              <span>{selectedJobId ? 'Job match overview' : 'Match overview'}</span>
+            </div>
+              <p className="text-[11px] text-bridged-primary/60 dark:text-bridged-light/60 max-w-xl">
+                Note: The match overview counts all matches for this job, while the shortlist below only shows the top candidates within your shortlist cap and current application window.
+              </p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full sm:w-auto">
+              <div className="rounded-xl bg-bridged-teal/10 px-3 py-2.5 flex flex-col">
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-bridged-teal/80">
+                  Total matches
+                </span>
+                <span className="mt-0.5 text-base font-extrabold text-bridged-primary dark:text-bridged-light">
+                  {overviewStats.total_matches.toLocaleString()}
+                </span>
+              </div>
+              <div className="rounded-xl bg-emerald-500/10 px-3 py-2.5 flex flex-col">
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-emerald-600/80 dark:text-emerald-400/90">
+                  Accepted
+                </span>
+                <span className="mt-0.5 text-base font-extrabold text-emerald-600 dark:text-emerald-400">
+                  {overviewStats.accepted_matches.toLocaleString()}
+                </span>
+              </div>
+              <div className="rounded-xl bg-amber-500/10 px-3 py-2.5 flex flex-col">
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-amber-600/90">
+                  Pending
+                </span>
+                <span className="mt-0.5 text-base font-extrabold text-bridged-accent">
+                  {overviewStats.pending_matches.toLocaleString()}
+                </span>
+              </div>
+              <div className="rounded-xl bg-red-500/10 px-3 py-2.5 flex flex-col">
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-red-600/90">
+                  Declined
+                </span>
+                <span className="mt-0.5 text-base font-extrabold text-red-700">
+                  {overviewStats.declined_matches.toLocaleString()}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {!isOnline && (
         <p className="mb-4 text-xs text-bridged-primary/60 dark:text-bridged-light/60">
@@ -195,18 +268,24 @@ const EmployerMatchesPage = ({ user, onNavigate }) => {
         <>
           {selectedJobId ? (
             <>
-              <div className="mb-6 flex items-center justify-between">
+              <div className="mb-6 flex items-center justify-between gap-3">
                 <button
                   type="button"
                   onClick={() => setSelectedJobId(null)}
                   className="flex items-center gap-2 text-sm font-medium text-bridged-teal hover:underline"
                 >
                   <i className="fa-solid fa-arrow-left" />
-                  Back to Job List
+                  Back to Matches List
                 </button>
-                <div className="text-right">
-                  <h2 className="text-lg font-bold text-bridged-primary dark:text-bridged-light">{selectedJob?.title || 'Job Shortlist'}</h2>
-                  <p className="text-xs text-bridged-primary/60 dark:text-bridged-light/60">Shortlist candidates</p>
+                <div className="flex-1 flex flex-col items-end gap-1">
+                  <div className="text-right">
+                    <h2 className="text-lg font-bold text-bridged-primary dark:text-bridged-light">
+                      {selectedJob?.title || 'Job Shortlist'}
+                    </h2>
+                    <p className="text-xs text-bridged-primary/60 dark:text-bridged-light/60">
+                      Shortlist candidates
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -291,10 +370,19 @@ const EmployerMatchesPage = ({ user, onNavigate }) => {
                             )}
                           </>
                         ) : (
-                          <div className="rounded-xl bg-bridged-primary/5 dark:bg-bridged-light/5 px-4 py-2 border border-dashed border-bridged-primary/20 dark:border-bridged-light/20">
-                            <p className="text-xs font-medium text-bridged-primary/40 dark:text-bridged-light/40 italic">
-                              Waiting for student interaction
-                            </p>
+                          <div className="flex flex-wrap items-center gap-3">
+                            <div className="rounded-xl bg-bridged-primary/5 dark:bg-bridged-light/5 px-4 py-2 border border-dashed border-bridged-primary/20 dark:border-bridged-light/20">
+                              <p className="text-xs font-medium text-bridged-primary/40 dark:text-bridged-light/40 italic">
+                                Waiting for student interaction
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleDismiss(m.match_id, name)}
+                              className="rounded-xl bg-red-500/10 px-4 py-2 text-xs font-bold text-red-500 hover:bg-red-500 hover:text-white transition-all border border-red-500/20"
+                            >
+                              Dismiss
+                            </button>
                           </div>
                         )}
                       </div>
