@@ -6,166 +6,35 @@
 
 BridgEd is a **web-based industrial placement platform** designed to bridge the gap between Nigerian university graduates and employers through **competency-based matching**. The system addresses the critical unemployment crisis among Nigerian youth by providing intelligent job-student matching based on verified skills rather than manual CV screening.
 
-### The Solution
+---
 
-BridgEd solves this dual-sided problem through:
+**Quick Links**
+**Demo video (5 min)** [Watch demo]() — covers core components (CV upload, matching, shortlist, messaging).
 
-1. **Smart CV Parsing** - Automated extraction of skills from uploaded resumes using PDF.js
-2. **Competency-Based Matching** - Algorithmic matching with **>80% compatibility threshold** between student skills and job requirements
-3. **Offline-First PWA** - Progressive Web App architecture ensuring access in low-bandwidth environments across Nigeria
-4. **Pre-Qualified Shortlists** - Employers receive filtered candidates who have indicated interest, eliminating manual screening
+**Live app:** [Deployed version](https://www.bridged.page/)
 
-### Key Features
-
-**For Students:**
-
-- Automated CV parsing with skill extraction
-- Personalized job recommendations (>80% match)
-- One-click interest indication
-- Application status tracking
-- Offline dashboard access
-
-**For Employers:**
-
-- Job posting with skill requirements
-- Pre-filtered qualified shortlist
-- One-click CV downloads
-- Hire confirmation workflow
-- Success-based pricing
-
-**For Admins:**
-
-- User management dashboard
-- Company verification workflow
-- Platform analytics
-- Content moderation tools
-
-### System Architecture
-
-**Current Implementation:**
-
-- **RESTful API**: Django REST Framework for scalable backend services
-- **PostgreSQL**: Robust relational database with Django ORM
-- **JWT Authentication**: Secure token-based authentication
-- **Modular Parsing**: Separate service layer for CV parsing logic
-
-**Planned Enhancements:**
-
-- **PWA**: Offline viewing of dashboard and cached recommendations
-- **Auto-scaling**: Handle peak traffic during SIWES mobilization periods
-- **Row-Level Security**: Enhanced data access controls
-- **Cloud Storage**: Optimized resume file storage
-
-### Tech Stack
-
-**Frontend:**
-
-- React 19.2+ with Vite (Fast development and build tool)
-- Vanilla CSS (Custom styling with modern features)
-- Axios (HTTP client for API communication)
-- Component-based architecture
-
-**Backend:**
-
-- Django 4.2.9 (Python web framework)
-- Django REST Framework 3.14 (RESTful API)
-- PostgreSQL (Relational database - local and Render cloud)
-- JWT Authentication (djangorestframework-simplejwt)
-- CORS Headers (django-cors-headers)
-
-**CV Parsing Engine:**
-
-- **pdfplumber** - PDF text extraction
-- **python-docx** - DOCX file parsing
-- **spaCy** - NLP for entity recognition
-- **Custom NLP Parser** - Skill extraction, education parsing, experience analysis
-
-**External Services:**
-
-- Render (PostgreSQL database hosting)
-- Vercel (Frontend deployment)
-- Render (Backend deployment)
+**Repo:** [GitHub](https://github.com/Skomaiya/BridgEd.git)
 
 ---
 
-## GitHub Repository
+## What it does
 
-**Repository URL:** [https://github.com/Skomaiya/BridgEd.git](https://github.com/Skomaiya/BridgEd.git)
-**Demo Video URL:** [https://drive.google.com/file/d/1mJAROI9jVYlMn0JuqXF-Y77626ZdmO9F/view?usp=sharing](https://drive.google.com/file/d/1mJAROI9jVYlMn0JuqXF-Y77626ZdmO9F/view?usp=sharing)
-
-### Repository Structure
-
-```
-BridgEd/
-├── frontend/                  # React + Vite frontend
-│   ├── src/
-│   │   ├── components/       # React components
-│   │   │   ├── Login.jsx    # Authentication
-│   │   │   ├── Register.jsx
-│   │   │   └── ResumeUploader.jsx  # CV upload & parsing UI
-│   │   ├── App.jsx          # Main app component
-│   │   ├── App.css          # Global styles
-│   │   └── main.jsx         # Entry point
-│   ├── index.html
-│   ├── vite.config.js       # Vite configuration
-│   └── package.json
-│
-├── api/                       # Django REST API
-│   ├── views.py             # API endpoints
-│   ├── serializers.py       # Data serialization
-│   ├── models.py            # Database models
-│   ├── urls.py              # URL routing
-│   └── authentication.py    # JWT auth logic
-│
-├── services/                  # CV Parsing Engine
-│   ├── nlp_parser.py        # Main NLP resume parser
-│   ├── text_extractor.py    # PDF/DOCX extraction
-│   ├── resume_pipeline.py   # Parsing orchestration
-│   ├── skill_keywords.py    # 250+ skill database
-│   └── matching_engine.py   # Job-resume matching
-│
-├── config/                    # Django project configuration
-│   ├── settings.py          # Django settings
-│   ├── urls.py              # Root URL configuration
-│   ├── wsgi.py              # WSGI application
-│   └── media/               # Uploaded resume files
-│       └── resumes/
-│
-├── docs/                      # Documentation & diagrams
-│   ├── SCREENSHOT_GUIDE.md
-│   ├── screenshots/         # App interface screenshots
-│   └── diagrams/
-│       ├── system_architecture.png
-│       ├── use_case_diagram_final.png
-│       └── class_diagram_final.png
-│
-├── manage.py                  # Django management script
-├── requirements.txt           # Python dependencies
-├── .env                       # Environment variables (not uploaded)
-├── .env.example              # Environment template
-├── .gitignore
-└── README.md
-```
-
-### Branch Strategy
-
-- **`main`** - Production-ready code
-- **`features`** - Individual feature branches
+- **Students:** Upload CV (PDF/DOCX); get parsed skills and job matches; accept/decline matches; message employers.
+- **Employers:** Post jobs with skill requirements; view pre-qualified shortlists; download CVs; employ or dismiss candidates.
+- **Admins:** User management, company verification, platform analytics.
 
 ---
 
-## Environment Setup
-
+## Install and run (step by step)
 ### Prerequisites
 
 Ensure the following software is installed:
-
 - **Python 3.10+** - [Download](https://www.python.org/downloads/)
 - **Node.js 18+** - [Download](https://nodejs.org/)
 - **PostgreSQL 14+** - [Download](https://www.postgresql.org/download/)
 - **Git** - [Download](https://git-scm.com/)
 
-### 1. Clone Repository
+### 1. Clone the repo
 
 ```bash
 git clone https://github.com/Skomaiya/BridgEd.git
@@ -177,7 +46,7 @@ cd BridgEd
 **Create Virtual Environment:**
 
 ```bash
-# Create virtual environment
+cd bridged-backend
 python -m venv venv
 
 # Activate virtual environment
@@ -187,147 +56,135 @@ venv\Scripts\activate
 source venv/bin/activate
 ```
 
-**Install Python Dependencies:**
-
 ```bash
 pip install -r requirements.txt
-```
-
-**Download spaCy Language Model:**
-
-```bash
-python -m spacy download en_core_web_sm
-```
-
-### 3. Database Configuration
-
-**Option A: Local PostgreSQL**
-
-```bash
-# Create database
-psql -U postgres
-CREATE DATABASE bridged_db;
-CREATE USER bridged_user WITH PASSWORD 'your_password';
-GRANT ALL PRIVILEGES ON DATABASE bridged_db TO bridged_user;
-\q
-```
-
-### 4. Environment Configuration
-
-**Copy the example environment file:**
-
-```bash
-# Windows
-copy .env.example .env
-
-# macOS/Linux
 cp .env.example .env
+# Edit .env: set SECRET_KEY, DB credentials, and LLM/Supabase/Paystack keys.
 ```
 
-**Edit `.env` and update the following values:**
-
-- `SECRET_KEY` - Generate a new Django secret key
-- `DB_PASSWORD` - Your PostgreSQL password
-- Update other values as needed for your local setup
-
-> See [`.env.example`](.env.example) for all available configuration options.
-
-### 5. Run Database Migrations
+**Database:**
 
 ```bash
-# Apply migrations
+# In PostgreSQL: create DB and user, then from bridged-backend:
 python manage.py migrate
 
 # Create superuser (admin)
 python manage.py createsuperuser
 ```
 
-### 6. Frontend Setup (React + Vite)
+**Run backend:**
 
 ```bash
-cd frontend
-npm install
-```
-
-### 7. Start Development Servers
-
-**Terminal 1 - Django Backend:**
-
-```bash
-# From project root
 python manage.py runserver
+# API: http://127.0.0.1:8000
 ```
 
-Backend runs at: **http://127.0.0.1:8000**
-
-**Terminal 2 - React Frontend:**
+### 3. Frontend (React + Vite)
 
 ```bash
-# From frontend directory
-cd frontend
+# From repo root
+cd bridged-frontend
+npm install
 npm run dev
+# App: http://localhost:5173
 ```
 
-Frontend runs at: **http://localhost:5173**
+### 4. Use the app
 
-### 8. Access Admin Panel
-
-Navigate to **http://127.0.0.1:8000/admin** to:
-
-- Manage users and resumes
-- View uploaded CVs
-- Monitor parsing results
-- Test API endpoints
+- Open **http://localhost:5173**: register as Student or Employer (skip long sign-up in demo; focus on CV upload, matches, shortlist, messaging).
+- Admin: **http://127.0.0.1:8000/admin** (use superuser account from step 2).
 
 ---
 
-## Designs & Mockups
+## Related files and project structure
 
-### System Architecture
+```
+Resume Parsing Implementations/
+├── README.md
+├── bridged-frontend/           # React 19 + Vite + Tailwind
+│   ├── src/
+│   │   ├── components/         # LandingPage, Auth, Dashboard, StudentParser, EmployerMatchesPage, …
+│   │   ├── api/api.js         # API client
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   ├── index.html
+│   ├── package.json
+│   ├── vite.config.js
+│   └── tailwind.config.js
+│
+├── bridged-backend/            # Django REST API
+│   ├── api/
+│   │   ├── views.py           # Endpoints (auth, jobs, matches, profiles, notifications, …)
+│   │   ├── serializers.py
+│   │   ├── models.py
+│   │   ├── urls.py
+│   │   └── permissions.py
+│   ├── config/
+│   │   ├── settings.py
+│   │   └── urls.py
+│   ├── services/
+│   │   ├── resume_pipeline.py # CV parsing orchestration
+│   │   ├── llm_parser.py      # LLM-based resume structuring
+│   │   ├── matching_engine.py # Job–student matching
+│   │   └── text_extractor.py  # PDF/DOCX extraction
+│   ├── manage.py
+│   ├── requirements.txt
+│   └── .env.example           # Env template
+│
+└── docs/                       # Documentation and diagrams (add as needed)
+    └── diagrams/              # Images (e.g. system_architecture.png, use_case_diagram.png, class_diagram.png)
+```
 
-**Three-Tier Web Application Architecture:**
+**Key files:**
 
-![System Architecture](./docs/assets/system_architecture.png)
-
-The architecture follows a **RESTful API model** with:
-
-- **Presentation Layer**: React SPA with Vite for fast development and optimized builds
-- **Application Logic**: Django REST Framework API with JWT authentication
-- **Data Layer**: PostgreSQL database with Django ORM
-- **Parsing Engine**: Custom NLP service using spaCy, pdfplumber, and python-docx
-
-**Key Components:**
-
-- **Frontend (React + Vite)**: User interface for CV upload, job browsing, and profile management
-- **Backend (Django)**: RESTful API endpoints for authentication, CV parsing, and job matching
-- **CV Parser Service**: Modular parsing pipeline extracting skills, education, and experience
-- **Database (PostgreSQL)**: Stores user data, parsed resumes, jobs, and matches
+| Area | Files |
+|------|--------|
+| API & auth | `bridged-backend/api/views.py`, `urls.py`, `serializers.py`, `models.py` |
+| CV parsing | `bridged-backend/services/resume_pipeline.py`, `llm_parser.py`, `text_extractor.py` |
+| Matching | `bridged-backend/services/matching_engine.py` |
+| Frontend UI | `bridged-frontend/src/App.jsx`, `components/*.jsx`, `api/api.js` |
 
 ---
 
-### UML Diagrams
+## Tech stack
 
-#### Use Case Diagram
-
-![Use Case Diagram](./docs/assets/use_case_final.png)
-
-**Key Use Cases:**
-
-- **Students**: Login, Create Profile, Upload Resume, View Matches, Indicate Interest, Track Status
-- **Employers**: Post Job, View Shortlist, Download CV, Close Job
-- **System**: Parse CV (automated), Calculate Match (algorithmic)
+- **Frontend:** React 19, Vite, TailwindCSS, Axios, PWA (vite-plugin-pwa).
+- **Backend:** Django 4.2+, Django REST Framework, JWT (Simple JWT), PostgreSQL.
+- **Parsing:** pdfplumber, python-docx, LLM (Hugging Face) for structured CV data.
+- **Deployment:** Backend (Render), Frontend (Render), DB (Render PostgreSQL).
 
 ---
 
-#### Class Diagram
+## Documentation and architecture
 
-![Class Diagram](./docs/assets/class_diagram_final.png)
+For a deeper view of the system design and screenshots:
 
-**Core Classes:**
+| Resource | Description |
+|----------|-------------|
+| [docs/](docs/) | Documentation folder (diagrams). |
+| [System architecture](docs/diagrams/system_architecture.png) | BridgEd system architecture diagram. |
+| [Class diagram](docs/diagrams/class_diagram_final.png) | Class diagram showcasing system class composition. |
+| [Use case diagram](docs/diagrams/use_case_final.png) | Use case diagram showcasing user functions. |
 
-- **User** (abstract) → Student, Employer
-- **Student** ◆─ Resume (1:1 composition)
-- **Employer** ◆─ Job (1:\* composition)
-- **Match** - Links Student and Job with compatibility score
-- **Resume** - Contains parsed data (skills, education, experience)
-- **Job** - Contains requirements and skill criteria
+---
+
+## Deployment
+
+- **Environments:** Development (local), Production (cloud).
+- **Steps:**
+
+(1) Set production `DEBUG=False`, `ALLOWED_HOSTS`, and DB/Supabase/Paystack in `.env`.
+
+(2) Backend: build and run with gunicorn (e.g. on Render).
+
+(3) Frontend: `npm run build` and deploy the `dist/` output (e.g. Render).
+
+(4) Run migrations and create superuser on the production DB.
+- **Verification:** Test login, CV upload, matching, and shortlist flows on the deployed URL.
+
+---
+
+## Testing
+
+- Backend tests: from `bridged-backend`, run `pytest` or `python manage.py test`.
+- Functionality has been checked with different data (e.g. multiple CVs, job variants, match thresholds) and on different environments (local Windows and deployed application) as per testing requirements.
