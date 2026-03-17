@@ -71,8 +71,6 @@ The successful completion of these tests proves that the core LLM processing occ
 
 ## 4. Recommendations and Future Work
 
-### For the Community
-
 Institutions and human resource departments are encouraged to adopt hybrid systems (combining deterministic skills filtering with LLM semantic comprehension) to reduce manual screening biases and accelerate how early-career talent is discovered.
 
 ### Future Development
