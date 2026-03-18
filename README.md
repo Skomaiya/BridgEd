@@ -9,7 +9,10 @@ BridgEd is a **web-based industrial placement platform** designed to bridge the 
 ---
 
 **Quick Links**
-**Demo video (5 min)** [Watch demo](https://drive.google.com/file/d/1DHFSvEh2ZfNzijYhmcx-FyfY-xjn5z9H/view?usp=sharing) — covers core components (CV upload, matching, shortlist, messaging).
+
+**Sped-up Demo video (5 min)** [Watch demo](https://drive.google.com/file/d/1B2z3EYCsTx0r6oUXRfvtj9RQO3j7Pg3I/view?usp=sharing) — covers core components (CV upload, matching, shortlist, messaging).
+
+**Full Demo video** [Watch demo](https://drive.google.com/file/d/1DHFSvEh2ZfNzijYhmcx-FyfY-xjn5z9H/view?usp=sharing) - full normal speed demo video.
 
 **Live app:** [Deployed version](https://www.bridged.page/)
 
