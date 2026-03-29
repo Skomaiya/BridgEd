@@ -9,7 +9,6 @@ import tempfile
 import threading
 import time
 
-from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
 from django.db import transaction
 from django.db.models import Q
@@ -34,12 +33,9 @@ from .models import (
     Notification,
     Resume,
     Student,
-    Subscription,
     UserReport,
 )
 from .permissions import (
-    CanViewMatch,
-    CanViewStudentProfile,
     IsAdmin,
     IsEmployer,
     IsJobOwner,
@@ -47,8 +43,6 @@ from .permissions import (
     IsStudent,
 )
 from .serializers import (
-    AdminEmployerSerializer,
-    AdminStudentSerializer,
     AdminUserSerializer,
     AuthResponseSerializer,
     EmployerMatchStatsSerializer,
@@ -72,6 +66,7 @@ from .serializers import (
     UserReportSerializer,
     UserSerializer,
     PlatformStatsSerializer,
+    DeleteAccountRequestSerializer,
 )
 
 User = get_user_model()
@@ -442,14 +437,14 @@ class UserProfilePhotoView(APIView):
 
 def _auto_run_matching(student):
     """Run the matching engine for a single student against all open jobs."""
-    from services.matching_engine import MatchingEngine, _skills_from_parsed_data
+    from services.matching_engine import MatchingEngine
 
     try:
         resume = student.resume
         if not resume or resume.status != Resume.STATUS_COMPLETED:
             return
 
-        student_skills = _skills_from_parsed_data(resume.parsed_data or {})
+        parsed_data = resume.parsed_data or {}
         jobs = Job.objects.open_for_applications()
         engine = MatchingEngine()
         STORE_THRESHOLD = 70
@@ -458,7 +453,9 @@ def _auto_run_matching(student):
         visible_count = 0
 
         for job in jobs:
-            match_result = engine.calculate_match_for_student(student, job)
+            match_result = engine.calculate_match_for_student(
+                student, job, parsed_data=parsed_data
+            )
             score = match_result["score"]
             if score >= STORE_THRESHOLD:
                 Match.objects.update_or_create(
@@ -689,7 +686,7 @@ def _recompute_matches_for_job(job):
     """Re-evaluate all existing matches for a job when it is updated."""
     from services.matching_engine import MatchingEngine
 
-    from .models import Match, Notification, Student
+    from .models import Match, Notification, Resume, Student
 
     try:
         engine = MatchingEngine()
@@ -701,11 +698,17 @@ def _recompute_matches_for_job(job):
             old_match = Match.objects.filter(job=job, student=student).first()
             old_score = old_match.compatibility_score if old_match else 0
 
-            res = engine.calculate_match_for_student(student, job)
+            try:
+                r = Resume.objects.get(student=student)
+                pd = r.parsed_data or {}
+            except Resume.DoesNotExist:
+                pd = {}
+
+            res = engine.calculate_match_for_student(student, job, parsed_data=pd)
             new_score = res["score"]
 
             if new_score >= STORE_THRESHOLD:
-                match, created = Match.objects.update_or_create(
+                Match.objects.update_or_create(
                     student=student,
                     job=job,
                     defaults={"compatibility_score": new_score},
@@ -715,21 +718,20 @@ def _recompute_matches_for_job(job):
                     Notification.objects.create(
                         user=student.user,
                         type="new match",
-                        message=f"New match: Job '{job.title}' by {job.employer.company_name} now matches your profile after an update.",
+                        message=(
+                            f"New match: Job '{job.title}' by {job.employer.company_name} "
+                            "now meets the strong match threshold after an update."
+                        ),
                     )
-                elif old_score >= SHOW_THRESHOLD and new_score < SHOW_THRESHOLD:
-                    Notification.objects.create(
-                        user=student.user,
-                        type="match declined",
-                        message=f"Match removal: Job '{job.title}' has been updated by the employer and no longer matches your profile.",
-                    )
-                    match.delete()
             elif old_match:
-                if old_score >= SHOW_THRESHOLD:
+                if old_score >= STORE_THRESHOLD:
                     Notification.objects.create(
                         user=student.user,
                         type="match declined",
-                        message=f"Match removal: Job '{job.title}' has been updated by the employer and no longer matches your profile.",
+                        message=(
+                            f"Match removal: Job '{job.title}' has been updated by the employer "
+                            "and no longer meets the minimum match threshold."
+                        ),
                     )
                 old_match.delete()
 
@@ -825,19 +827,53 @@ class JobViewSet(viewsets.ModelViewSet):
         detail=False, methods=["get"], permission_classes=[IsAuthenticated, IsEmployer]
     )
     def my_jobs(self, request):
-        """Get all jobs posted by current employer (including closed and past-deadline)."""
-        queryset = Job.objects.filter(employer__user=request.user).order_by(
-            "-created_at"
+        """Jobs for the current employer.
+
+        Query params:
+        - ``search`` — SearchFilter (title, description, etc.)
+        - ``listing_status`` — optional ``active`` or ``expired``. If omitted, all jobs
+          (newest first), including closed and past-deadline.
+
+        Paginated responses include ``active_count`` and ``expired_count`` (totals for
+        this employer, before ``search`` / ``listing_status`` filters).
+        """
+        now = timezone.now()
+        active_q = Q(is_open=True) & (
+            Q(application_deadline__isnull=True) | Q(application_deadline__gte=now)
         )
+        expired_q = Q(is_open=False) | (
+            Q(application_deadline__isnull=False) & Q(application_deadline__lt=now)
+        )
+
+        base_qs = Job.objects.filter(employer__user=request.user)
+        active_count = base_qs.filter(active_q).count()
+        expired_count = base_qs.filter(expired_q).count()
+
+        queryset = base_qs.order_by("-created_at")
+        listing_status = request.query_params.get("listing_status")
+        if listing_status == "active":
+            queryset = queryset.filter(active_q)
+        elif listing_status == "expired":
+            queryset = queryset.filter(expired_q)
+
         jobs = self.filter_queryset(queryset)
 
         page = self.paginate_queryset(jobs)
         if page is not None:
             serializer = JobListSerializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
+            response = self.get_paginated_response(serializer.data)
+            response.data["active_count"] = active_count
+            response.data["expired_count"] = expired_count
+            return response
 
         serializer = JobListSerializer(jobs, many=True)
-        return Response(serializer.data)
+        return Response(
+            {
+                "results": serializer.data,
+                "active_count": active_count,
+                "expired_count": expired_count,
+            }
+        )
 
     @action(
         detail=True,
@@ -946,143 +982,203 @@ class MatchView(APIView):
 
             resume = student.resume
             from services.matching_engine import (
+                DEFAULT_MATCHING_LLM_MIN_BASE_SCORE,
                 MatchingEngine,
+                _env_bool,
+                _env_float,
                 _match_response_from_job,
-                _skills_from_parsed_data,
             )
 
-            student_skills = _skills_from_parsed_data(resume.parsed_data or {})
+            parsed_data = resume.parsed_data or {}
             jobs = Job.objects.open_for_applications()
             engine = MatchingEngine()
 
             STORE_THRESHOLD = 70
             SHOW_THRESHOLD = 85
 
+            contextual_matcher_stats = {
+                "contextual_llm_enabled": _env_bool(
+                    "MATCHING_CONTEXT_LLM_ENABLED", True
+                ),
+                "min_base_score_for_llm": _env_float(
+                    "MATCHING_LLM_MIN_BASE_SCORE", DEFAULT_MATCHING_LLM_MIN_BASE_SCORE
+                ),
+                "jobs_evaluated": len(jobs),
+                "outcomes": {
+                    "applied": 0,
+                    "skipped_low_base": 0,
+                    "skipped_disabled": 0,
+                    "unavailable": 0,
+                },
+            }
+
             matches_data = []
-            any_new_match = False
+            any_new_strong = False
+            any_new_moderate = False
 
             for job in jobs:
-                match_result = engine.calculate_match_for_student(student, job)
+                match_result = engine.calculate_match_for_student(
+                    student, job, parsed_data=parsed_data
+                )
+                ml = match_result.get("matcher_llm")
+                if ml and ml.get("outcome") in contextual_matcher_stats["outcomes"]:
+                    contextual_matcher_stats["outcomes"][ml["outcome"]] += 1
                 score = match_result["score"]
 
-                if score >= STORE_THRESHOLD:
-                    match, created = Match.objects.update_or_create(
-                        student=student,
-                        job=job,
-                        defaults={"compatibility_score": score},
+                if score < STORE_THRESHOLD:
+                    continue
+
+                match, created = Match.objects.update_or_create(
+                    student=student,
+                    job=job,
+                    defaults={"compatibility_score": score},
+                )
+
+                deadline = job.application_deadline
+                if deadline is not None:
+                    deadline_date = (
+                        deadline.date()
+                        if hasattr(deadline, "date") and callable(deadline.date)
+                        else deadline
                     )
+                    deadline_passed = deadline_date < timezone.now().date()
+                else:
+                    deadline_passed = False
+                cap = job.max_shortlist_size
+                if cap is not None:
+                    accepted_count = (
+                        Match.objects.filter(
+                            job=job,
+                            student_interested=True,
+                            student_declined=False,
+                        )
+                        .exclude(match_id=match.match_id)
+                        .count()
+                    )
+                    shortlist_full = accepted_count >= cap
+                else:
+                    shortlist_full = False
+                can_accept = not deadline_passed and not shortlist_full
 
+                if (
+                    score >= SHOW_THRESHOLD
+                    and getattr(student, "auto_accept_matches", False)
+                    and can_accept
+                ):
+                    if not match.student_interested and not match.student_declined:
+                        match.student_interested = True
+                        match.student_declined = False
+                        match.save(
+                            update_fields=["student_interested", "student_declined"]
+                        )
+
+                        student_display = (
+                            getattr(match.student, "display_name", None)
+                            or match.student.user.email
+                        )
+                        Notification.objects.create(
+                            user=match.job.employer.user,
+                            type="student interested",
+                            message=(
+                                f"({student_display}) has automatically accepted their match "
+                                f"for your position '{job.title}' based on their settings. "
+                                "Visit Matches to view their profile and download their CV."
+                            ),
+                        )
+                        Notification.objects.create(
+                            user=request.user,
+                            type="interest confirmed",
+                            message=(
+                                f"We've automatically accepted your match with '{job.title}' at "
+                                f"{job.employer.company_name} based on your settings. "
+                                "The employer has been notified and can now view your profile."
+                            ),
+                        )
+
+                if created:
                     if score >= SHOW_THRESHOLD:
-                        if created:
-                            any_new_match = True
-                        from django.utils import timezone as tz
+                        any_new_strong = True
+                    else:
+                        any_new_moderate = True
 
-                        deadline = job.application_deadline
-                        if deadline is not None:
-                            deadline_date = (
-                                deadline.date()
-                                if hasattr(deadline, "date") and callable(deadline.date)
-                                else deadline
-                            )
-                            deadline_passed = deadline_date < tz.now().date()
-                        else:
-                            deadline_passed = False
-                        cap = job.max_shortlist_size
-                        if cap is not None:
-                            accepted_count = (
-                                Match.objects.filter(
-                                    job=job,
-                                    student_interested=True,
-                                    student_declined=False,
-                                )
-                                .exclude(match_id=match.match_id)
-                                .count()
-                            )
-                            shortlist_full = accepted_count >= cap
-                        else:
-                            shortlist_full = False
-                        can_accept = not deadline_passed and not shortlist_full
-
-                        if getattr(student, "auto_accept_matches", False) and can_accept:
-                            if not match.student_interested and not match.student_declined:
-                                match.student_interested = True
-                                match.student_declined = False
-                                match.save(update_fields=["student_interested", "student_declined"])
-
-                                student_display = (
-                                    getattr(match.student, "display_name", None)
-                                    or match.student.user.email
-                                )
-                                Notification.objects.create(
-                                    user=match.job.employer.user,
-                                    type="student interested",
-                                    message=(
-                                        f"A student ({student_display}) has automatically accepted their match "
-                                        f"for your position '{job.title}' based on their settings. "
-                                        "Visit Matches to view their profile and download their CV."
-                                    ),
-                                )
-                                Notification.objects.create(
-                                    user=request.user,
-                                    type="interest confirmed",
-                                    message=(
-                                        f"We've automatically accepted your match with '{job.title}' at "
-                                        f"{job.employer.company_name} based on your settings. "
-                                        "The employer has been notified and can now view your profile."
-                                    ),
-                                )
-
-                        match_payload = _match_response_from_job(job, match_result)
-                        match_payload["match_id"] = str(match.match_id)
-                        match_payload["company_name"] = (
-                            match_payload.get("company") or job.employer.company_name
-                        )
-                        match_payload["employer_bio"] = (
-                            getattr(job.employer, "bio", "") or ""
-                        )
-                        match_payload["employer_industry"] = (
-                            getattr(job.employer, "industry", "") or ""
-                        )
-                        match_payload["employer_company_size"] = (
-                            getattr(job.employer, "company_size", "") or ""
-                        )
-                        match_payload["employer_website"] = (
-                            getattr(job.employer, "website", "") or ""
-                        )
-                        match_payload["employer_location"] = (
-                            getattr(job.employer, "location", "") or ""
-                        )
-                        match_payload["is_open"] = job.is_open
-                        match_payload["application_deadline"] = (
-                            job.application_deadline.isoformat()
-                            if job.application_deadline
-                            else None
-                        )
-                        match_payload["student_interested"] = match.student_interested
-                        match_payload["student_declined"] = match.student_declined
-                        match_payload["can_accept"] = can_accept
-                        match_payload.pop("compatibility_score", None)
-                        matches_data.append(match_payload)
+                match_payload = _match_response_from_job(job, match_result)
+                match_payload["match_id"] = str(match.match_id)
+                match_payload["company_name"] = (
+                    match_payload.get("company") or job.employer.company_name
+                )
+                match_payload["employer_bio"] = getattr(job.employer, "bio", "") or ""
+                match_payload["employer_industry"] = (
+                    getattr(job.employer, "industry", "") or ""
+                )
+                match_payload["employer_company_size"] = (
+                    getattr(job.employer, "company_size", "") or ""
+                )
+                match_payload["employer_website"] = (
+                    getattr(job.employer, "website", "") or ""
+                )
+                match_payload["employer_location"] = (
+                    getattr(job.employer, "location", "") or ""
+                )
+                match_payload["is_open"] = job.is_open
+                match_payload["application_deadline"] = (
+                    job.application_deadline.isoformat()
+                    if job.application_deadline
+                    else None
+                )
+                match_payload["student_interested"] = match.student_interested
+                match_payload["student_declined"] = match.student_declined
+                match_payload["can_accept"] = can_accept
+                match_payload["score_tier"] = (
+                    "strong" if score >= SHOW_THRESHOLD else "standard"
+                )
+                matches_data.append(match_payload)
 
             matches_data.sort(
-                key=lambda x: len(x.get("matched_skills", [])), reverse=True
+                key=lambda x: (
+                    -float(x.get("compatibility_score") or 0),
+                    -len(x.get("matched_skills", [])),
+                )
             )
 
+            for match_data in matches_data:
+                match_data.pop("compatibility_score", None)
+
             new_match_count = len(matches_data)
-            if new_match_count > 0 and any_new_match:
+            if new_match_count > 0 and (any_new_strong or any_new_moderate):
                 from datetime import timedelta
 
-                one_hour_ago = tz.now() - timedelta(hours=1)
+                one_hour_ago = timezone.now() - timedelta(hours=1)
                 recent_notif = Notification.objects.filter(
                     user=student.user, type="new match", created_at__gte=one_hour_ago
                 ).exists()
 
                 if not recent_notif:
-                    if new_match_count == 1:
+                    if any_new_moderate and not any_new_strong:
+                        if new_match_count == 1:
+                            job_title = matches_data[0].get("job_title", "a position")
+                            msg = (
+                                f"We found a potential match for '{job_title}' (review suggested). "
+                                "Open Matches to see details and respond."
+                            )
+                        else:
+                            titles = ", ".join(
+                                f"'{m.get('job_title', 'position')}'"
+                                for m in matches_data[:3]
+                            )
+                            extra = (
+                                f" and {new_match_count - 3} more"
+                                if new_match_count > 3
+                                else ""
+                            )
+                            msg = (
+                                f"You have {new_match_count} potential job matches: {titles}{extra}. "
+                                "These meet the expanded threshold — review them in Matches."
+                            )
+                    elif new_match_count == 1:
                         job_title = matches_data[0].get("job_title", "a position")
                         msg = (
                             f"Great news! You have been matched with '{job_title}'. "
-                            "Your skills meet the requirements, head to Matches to review and respond."
+                            "Your profile aligns strongly — head to Matches to review and respond."
                         )
                     else:
                         titles = ", ".join(
@@ -1108,11 +1204,6 @@ class MatchView(APIView):
             paginator.page_size = 20
             page = paginator.paginate_queryset(matches_data, request)
 
-            response_data = {
-                "student_id": str(student.student_id),
-                "total_matches": new_match_count,
-            }
-
             if page is not None:
                 return Response(
                     {
@@ -1122,6 +1213,7 @@ class MatchView(APIView):
                         "previous": paginator.get_previous_link(),
                         "matches": page,
                         "student_id": str(student.student_id),
+                        "contextual_matcher": contextual_matcher_stats,
                     }
                 )
 
@@ -1130,6 +1222,7 @@ class MatchView(APIView):
                     "count": new_match_count,
                     "matches": matches_data,
                     "student_id": str(student.student_id),
+                    "contextual_matcher": contextual_matcher_stats,
                 }
             )
 
@@ -1179,7 +1272,7 @@ class IndicateInterestView(APIView):
                 user=match.job.employer.user,
                 type="student interested",
                 message=(
-                    f"A student ({student_display}) has accepted their match and is interested "
+                    f"({student_display}) has accepted their match and is interested "
                     f"in your position '{job_title}'. Visit Matches to view their profile and download their CV."
                 ),
             )
@@ -1263,19 +1356,8 @@ class EmployerMatchesView(generics.ListAPIView):
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        seen_per_job = {}
-        capped = []
-        for m in queryset:
-            cap = m.job.max_shortlist_size if m.job else None
-            if cap is not None:
-                n = seen_per_job.get(m.job_id, 0)
-                if n >= cap:
-                    continue
-                seen_per_job[m.job_id] = n + 1
-            capped.append(m)
-
-        page = self.paginate_queryset(capped)
-        results_to_serialize = page if page is not None else capped
+        page = self.paginate_queryset(queryset)
+        results_to_serialize = page if page is not None else queryset
 
         out = []
         for m in results_to_serialize:
@@ -1917,15 +1999,26 @@ class DeleteAccountView(APIView):
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
+        request=DeleteAccountRequestSerializer,
         responses={
             204: OpenApiResponse(description="Account deleted"),
             400: OpenApiResponse(description="Error deleting account"),
         },
-        description="Permanently delete the current user's account and all associated data.",
+        description="Permanently delete the current user's account. Requires the correct account password.",
         tags=["Authentication"],
     )
     def post(self, request):
+        serializer = DeleteAccountRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        password = serializer.validated_data["password"]
+
         user = request.user
+        if not user.check_password(password):
+            return Response(
+                {"error": "Incorrect password."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         user_id = str(user.user_id)
         from services.supabase_auth import delete_supabase_user
         from services.supabase_storage import delete_profile_image, delete_resume_file
@@ -2027,13 +2120,13 @@ class ConversationViewSet(viewsets.GenericViewSet):
         if user.role == "employer":
             return (
                 Conversation.objects.filter(employer__user=user)
-                .select_related("match", "employer", "student__user")
+                .select_related("employer", "student__user")
                 .prefetch_related("messages__sender")
             )
         else:
             return (
                 Conversation.objects.filter(student__user=user)
-                .select_related("match", "employer", "student__user")
+                .select_related("employer", "student__user")
                 .prefetch_related("messages__sender")
             )
 
@@ -2092,17 +2185,16 @@ class ConversationViewSet(viewsets.GenericViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         conversation, created = Conversation.objects.get_or_create(
-            match=match,
-            defaults={
-                "employer": request.user.employer_profile,
-                "student": match.student,
-            },
+            employer=request.user.employer_profile,
+            student=match.student,
         )
         if created:
             Notification.objects.create(
                 user=match.student.user,
                 type="new message",
-                message=f"Employer {request.user.employer_profile.company_name} has started a conversation with you for the role of {match.job.title}.",
+                message=(
+                    f"{request.user.employer_profile.company_name} has started a conversation with you."
+                ),
             )
         return Response(
             ConversationSerializer(conversation, context={"request": request}).data

@@ -440,13 +440,10 @@ class ContactRequest(models.Model):
 
 
 class Conversation(models.Model):
-    """A direct-message thread between an employer and a matched student."""
+    """A direct-message thread between an employer and a student (one thread per pair)."""
 
     conversation_id = models.UUIDField(
         primary_key=True, default=uuid.uuid4, editable=False
-    )
-    match = models.OneToOneField(
-        Match, on_delete=models.CASCADE, related_name="conversation"
     )
     employer = models.ForeignKey(
         Employer, on_delete=models.CASCADE, related_name="conversations"
@@ -464,6 +461,12 @@ class Conversation(models.Model):
         verbose_name = "Conversation"
         verbose_name_plural = "Conversations"
         ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["employer", "student"],
+                name="uniq_conversation_employer_student",
+            )
+        ]
 
 
 class Message(models.Model):

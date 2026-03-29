@@ -166,8 +166,8 @@ export const authAPI = {
     });
     return response.data;
   },
-  deleteAccount: async () => {
-    const response = await serverClient.post("/auth/delete-account");
+  deleteAccount: async (payload = {}) => {
+    const response = await serverClient.post("/auth/delete-account", payload);
     return response.data;
   },
 };
@@ -214,12 +214,19 @@ export const resumeAPI = {
   },
 };
 
+/** Keep in sync with `PAGE_SIZE` in `bridged-backend/config/settings.py` (DRF). */
+export const API_PAGE_SIZE = 10;
+
 export const jobsAPI = {
   list: (params = {}) =>
     serverClient.get("/jobs/", { params }).then((r) => r.data),
-  getMyJobs: (search = "") =>
+  /**
+   * @param {string} [search]
+   * @param {Record<string, unknown>} [extraParams] e.g. `{ page: 2 }` — required for employer job pagination
+   */
+  getMyJobs: (search = "", extraParams = {}) =>
     serverClient
-      .get("/jobs/my_jobs/", { params: { search } })
+      .get("/jobs/my_jobs/", { params: { search, ...extraParams } })
       .then((r) => r.data),
   get: (jobId) => serverClient.get(`/jobs/${jobId}/`).then((r) => r.data),
   create: (payload) => api.post("/jobs/", payload).then((r) => r.data),

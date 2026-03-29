@@ -40,6 +40,17 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ["user_id", "created_at"]
 
 
+class DeleteAccountRequestSerializer(serializers.Serializer):
+    """Current account password (required to authorize deletion)."""
+
+    password = serializers.CharField(
+        write_only=True,
+        required=True,
+        allow_blank=False,
+        style={"input_type": "password"},
+    )
+
+
 class ContactRequestSerializer(serializers.ModelSerializer):
     """Contact Request serializer"""
 
@@ -451,6 +462,17 @@ class MatchSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["match_id", "compatibility_score", "matched_at", "status"]
 
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        request = self.context.get("request")
+        if (
+            request
+            and request.user
+            and getattr(request.user, "role", None) == "student"
+        ):
+            ret.pop("compatibility_score", None)
+        return ret
+
 
 class MatchListSerializer(serializers.ModelSerializer):
     """Simplified match list for dashboards"""
@@ -472,6 +494,17 @@ class MatchListSerializer(serializers.ModelSerializer):
             "student_interested",
             "matched_at",
         ]
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        request = self.context.get("request")
+        if (
+            request
+            and request.user
+            and getattr(request.user, "role", None) == "student"
+        ):
+            ret.pop("compatibility_score", None)
+        return ret
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
@@ -585,7 +618,11 @@ class ConversationSerializer(serializers.ModelSerializer):
     other_party_user_id = serializers.SerializerMethodField()
     last_message = serializers.SerializerMethodField()
     unread_count = serializers.SerializerMethodField()
-    match_id = serializers.UUIDField(source="match.match_id", read_only=True)
+    match_id = serializers.SerializerMethodField()
+
+    def get_match_id(self, obj):
+        """Kept for API compatibility; conversations are keyed by employer–student pair."""
+        return None
 
     class Meta:
         model = Conversation

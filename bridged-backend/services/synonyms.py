@@ -101,3 +101,21 @@ SKILL_SYNONYMS = {
     "git": "git",
     "github": "git",
 }
+
+ROLE_SENIORITY_SYNONYMS = {
+    "sr": "senior",
+    "sr.": "senior",
+    "snr": "senior",
+    "lead": "lead",
+    "team lead": "lead",
+    "tech lead": "lead",
+    "technical lead": "lead",
+    "principal": "principal",
+    "staff": "staff",
+    "architect": "architect",
+    "engineering manager": "manager",
+    "technical manager": "manager",
+    "head of engineering": "head",
+    "head of technology": "head",
+    "head engineer": "head",
+}

@@ -1,10 +1,11 @@
 """
 Management command: run_matching_scan
 
-Iterates through every student with a completed resume and runs the matching
-engine against all currently open jobs.  Existing matches are updated with the
-latest score; new matches are inserted.  Students with at least one newly
-visible match (score >= SHOW_THRESHOLD) receive an in-app notification.
+Iterates through every student with a completed resume and runs the full
+matching pipeline (location, contract, contextual LLM when enabled) against
+all currently open jobs. Existing matches are updated with the latest score;
+new matches are inserted. Students receive tiered in-app notifications when
+new matches appear (strong ≥85% vs expanded 70–84%).
 
 Usage:
     python manage.py run_matching_scan
@@ -16,12 +17,11 @@ twice a day (08:00 and 20:00 server time).
 import logging
 
 from django.core.management.base import BaseCommand
-from django.db.models import Q
 from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
-STORE_THRESHOLD = 50
+STORE_THRESHOLD = 70
 SHOW_THRESHOLD = 85
 
 
@@ -30,7 +30,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         from api.models import Job, Match, Notification, Resume, Student
-        from services.matching_engine import MatchingEngine, _skills_from_parsed_data
+        from services.matching_engine import MatchingEngine
 
         self.stdout.write("Starting matching scan…")
         logger.info("Periodic matching scan started.")
@@ -61,34 +61,51 @@ class Command(BaseCommand):
 
         for student in students:
             try:
-                resume = student.resume
-                student_skills = _skills_from_parsed_data(resume.parsed_data or {})
-                new_visible = 0
+                new_strong = 0
+                new_moderate = 0
 
+                resume = student.resume
+                pd = resume.parsed_data or {}
                 for job in open_jobs:
-                    match_result = engine.calculate_match(
-                        student_skills, job.required_skills, job.nice_to_have_skills
+                    match_result = engine.calculate_match_for_student(
+                        student, job, parsed_data=pd
                     )
                     score = match_result["score"]
 
-                    if score >= STORE_THRESHOLD:
-                        _, created = Match.objects.update_or_create(
-                            student=student,
-                            job=job,
-                            defaults={"compatibility_score": score},
-                        )
-                        if created and score >= SHOW_THRESHOLD:
-                            new_visible += 1
-                        updated += 1
+                    if score < STORE_THRESHOLD:
+                        continue
 
-                if new_visible > 0:
+                    _, created = Match.objects.update_or_create(
+                        student=student,
+                        job=job,
+                        defaults={"compatibility_score": score},
+                    )
+                    updated += 1
+                    if created:
+                        if score >= SHOW_THRESHOLD:
+                            new_strong += 1
+                        else:
+                            new_moderate += 1
+
+                if new_strong > 0:
                     Notification.objects.create(
                         user=student.user,
                         type="new match",
                         message=(
-                            f"You have {new_visible} new job match"
-                            f"{'es' if new_visible != 1 else ''} available. "
+                            f"You have {new_strong} new strong job match"
+                            f"{'es' if new_strong != 1 else ''} (85%+). "
                             "Head to Matches to review them."
+                        ),
+                    )
+                    notified += 1
+                elif new_moderate > 0:
+                    Notification.objects.create(
+                        user=student.user,
+                        type="new match",
+                        message=(
+                            f"You have {new_moderate} additional job match"
+                            f"{'es' if new_moderate != 1 else ''} (expanded threshold). "
+                            "Review them in Matches — contextual scoring still applies."
                         ),
                     )
                     notified += 1
@@ -100,7 +117,7 @@ class Command(BaseCommand):
 
         summary = (
             f"Scan complete — {total_students} students processed, "
-            f"{updated} match records updated, {notified} students notified."
+            f"{updated} match records upserted, {notified} students notified."
         )
         self.stdout.write(summary)
         logger.info(summary)

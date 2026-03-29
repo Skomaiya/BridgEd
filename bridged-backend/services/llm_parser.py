@@ -261,7 +261,11 @@ def _normalize_parsed(raw: Dict[str, Any]) -> Dict[str, Any]:
                 description = []
             if not name_val and not description:
                 continue
-            if name_val and name_val.lower() in {"project", "projects"} and not description:
+            if (
+                name_val
+                and name_val.lower() in {"project", "projects"}
+                and not description
+            ):
                 continue
             projects.append(
                 {
