@@ -15,12 +15,17 @@ const Auth = ({ onLoginSuccess, onRegisterSuccess, onBack, darkMode, toggleDarkM
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showImageFallback, setShowImageFallback] = useState(false);
   const [panelImageExt, setPanelImageExt] = useState('png');
+  const [agreeToTerms, setAgreeToTerms] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
     if (!isLogin) {
+      if (!agreeToTerms) {
+        setError('You must agree to the Privacy Policy and Terms of Service to sign up.');
+        return;
+      }
       if (password !== confirmPassword) {
         setError('Passwords do not match.');
         return;
@@ -279,6 +284,22 @@ const Auth = ({ onLoginSuccess, onRegisterSuccess, onBack, darkMode, toggleDarkM
                     />
                   </div>
                 )}
+
+                <div className="mt-2 flex items-start gap-3">
+                  <div className="flex h-5 items-center">
+                    <input
+                      id="terms"
+                      type="checkbox"
+                      checked={agreeToTerms}
+                      onChange={(e) => setAgreeToTerms(e.target.checked)}
+                      disabled={loading}
+                      className="h-4 w-4 rounded border-bridged-primary/20 accent-bridged-accent text-bridged-accent focus:ring-bridged-accent dark:border-bridged-light/20 dark:bg-bridged-primary dark:ring-offset-bridged-primary"
+                    />
+                  </div>
+                  <label htmlFor="terms" className="text-sm text-bridged-primary/70 dark:text-bridged-light/70 leading-tight">
+                    By creating an account, I agree to the <a href="/privacy" className="text-bridged-teal hover:underline font-medium" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
+                  </label>
+                </div>
               </>
             )}
 

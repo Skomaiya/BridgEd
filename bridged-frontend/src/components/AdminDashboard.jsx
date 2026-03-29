@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import serverClient, { adminAPI, jobsAPI } from '../api/api';
+import serverClient, { adminAPI, jobsAPI, API_PAGE_SIZE } from '../api/api';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
 import { useAlert } from '../context/GlobalAlertContext';
 
@@ -41,27 +41,27 @@ const AdminDashboard = ({ user, activeTab }) => {
       if (activeTab === 'employers') {
         const data = await adminAPI.listEmployers(params);
         setEmployers(data.results || []);
-        setTotalPages(data.count ? Math.ceil(data.count / 20) : 1);
+        setTotalPages(data.count ? Math.ceil(data.count / API_PAGE_SIZE) : 1);
       } else if (activeTab === 'students') {
         const data = await adminAPI.listStudents(params);
         setStudents(data.results || []);
-        setTotalPages(data.count ? Math.ceil(data.count / 20) : 1);
+        setTotalPages(data.count ? Math.ceil(data.count / API_PAGE_SIZE) : 1);
       } else if (activeTab === 'jobs') {
         const data = await jobsAPI.list(params);
         setJobs(data.results || []);
-        setTotalPages(data.count ? Math.ceil(data.count / 20) : 1);
+        setTotalPages(data.count ? Math.ceil(data.count / API_PAGE_SIZE) : 1);
       } else if (activeTab === 'contacts') {
         const data = await adminAPI.listContactRequests(params);
         setContactRequests(Array.isArray(data.results) ? data.results : (Array.isArray(data) ? data : []));
-        if (data.results) setTotalPages(Math.ceil(data.count / 20)); else setTotalPages(1);
+        if (data.results) setTotalPages(Math.ceil(data.count / API_PAGE_SIZE)); else setTotalPages(1);
       } else if (activeTab === 'reports') {
         const data = await adminAPI.listReports(params);
         setUserReports(data.results || []);
-        setTotalPages(data.count ? Math.ceil(data.count / 20) : 1);
+        setTotalPages(data.count ? Math.ceil(data.count / API_PAGE_SIZE) : 1);
       } else if (activeTab === 'admins') {
         const data = await adminAPI.listAdmins(params);
         const adminArray = data.results || [];
-        setTotalPages(data.count ? Math.ceil(data.count / 20) : 1);
+        setTotalPages(data.count ? Math.ceil(data.count / API_PAGE_SIZE) : 1);
         setAdmins(adminArray.map(u => ({ user: u, display_name: 'Admin User' })));
       } else {
         const [empData, stuData] = await Promise.all([

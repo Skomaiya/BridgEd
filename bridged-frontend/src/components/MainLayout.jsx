@@ -16,7 +16,7 @@ const notificationTypeLabel = (type) => {
 };
 
 const navLinkClass = (darkMode, active) =>
-  `text-sm font-medium transition-colors ${
+  `whitespace-nowrap text-sm font-medium transition-colors ${
     active
       ? darkMode ? 'text-bridged-accent' : 'text-bridged-teal'
       : darkMode
@@ -188,33 +188,33 @@ const MainLayout = ({ user, onLogout, children, currentPage, onNavigate }) => {
   );
 
   return (
-    <div className="flex min-h-screen flex-col bg-bridged-light dark:bg-bridged-primary">
+    <div className="flex min-h-screen min-w-0 flex-col overflow-x-hidden bg-bridged-light dark:bg-bridged-primary">
       <header
-        className={`sticky top-0 z-20 w-full ${
+        className={`sticky top-0 z-20 w-full min-w-0 ${
           darkMode ? 'bg-bridged-primary/95 backdrop-blur-md' : 'bg-white/95 backdrop-blur-md'
         } shadow-sm`}
       >
-        <div className="flex w-full items-center justify-between px-4 py-3 sm:px-6">
-          <div className="flex items-center">
+        <div className="flex w-full min-w-0 items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-5 sm:py-3 lg:px-6">
+          <div className="flex min-w-0 shrink items-center">
             <img
               src={darkMode ? '/images/logo-dark.png' : '/images/logo-light.png'}
               alt="BridgEd"
-              className="h-12 w-auto object-contain transition-transform origin-left scale-[2.5] cursor-pointer"
+              className="h-8 w-auto max-h-9 max-w-[9.5rem] cursor-pointer object-contain object-left sm:max-w-[11rem] sm:max-h-10 lg:max-w-[12rem]"
               onClick={() => onNavigate?.(user?.role === 'admin' ? 'admin-dashboard' : 'dashboard')}
             />
           </div>
 
-          {/* Desktop nav links - hidden on mobile */}
-          <nav className="hidden sm:flex items-center gap-6">
+          {/* Nav: horizontal from lg up; phone + tablet use hamburger below */}
+          <nav className="hidden min-w-0 items-center gap-3 lg:flex xl:gap-6">
             {buildNavLinks(null)}
           </nav>
 
-          <div className="flex items-center gap-1 sm:gap-2">
+          <div className="flex shrink-0 items-center gap-0.5 sm:gap-1 lg:gap-2">
             <div className="relative" ref={notificationsRef}>
               <button
                 type="button"
                 onClick={() => { onNavigate?.('notifications'); }}
-                className={`sm:hidden relative rounded-lg p-2 transition-colors ${
+                className={`relative rounded-lg p-2 transition-colors lg:hidden ${
                   darkMode
                     ? 'text-bridged-light hover:bg-bridged-light/10'
                     : 'text-bridged-primary/80 hover:bg-bridged-primary/10 hover:text-bridged-primary'
@@ -229,7 +229,7 @@ const MainLayout = ({ user, onLogout, children, currentPage, onNavigate }) => {
               <button
                 type="button"
                 onClick={() => setNotificationsOpen((o) => !o)}
-                className={`hidden sm:flex relative rounded-lg p-2 transition-colors ${
+                className={`relative hidden rounded-lg p-2 transition-colors lg:flex ${
                   darkMode
                     ? 'text-bridged-light hover:bg-bridged-light/10'
                     : 'text-bridged-primary/80 hover:bg-bridged-primary/10 hover:text-bridged-primary'
@@ -344,7 +344,7 @@ const MainLayout = ({ user, onLogout, children, currentPage, onNavigate }) => {
             </button>
 
             <div
-              className={`hidden sm:flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full overflow-hidden text-sm font-semibold ${
+              className={`hidden h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full text-sm font-semibold lg:flex ${
                 darkMode ? 'bg-bridged-teal text-white' : 'border-2 border-bridged-accent bg-bridged-light text-bridged-primary'
               }`}
               title={displayName}
@@ -364,7 +364,7 @@ const MainLayout = ({ user, onLogout, children, currentPage, onNavigate }) => {
             <button
               type="button"
               onClick={onLogout}
-              className={`hidden sm:flex items-center gap-2 text-sm font-medium ${
+              className={`hidden items-center gap-2 text-sm font-medium lg:flex ${
                 darkMode ? 'text-bridged-light/80 hover:text-bridged-light' : 'text-bridged-primary/80 hover:text-bridged-primary'
               }`}
             >
@@ -372,11 +372,11 @@ const MainLayout = ({ user, onLogout, children, currentPage, onNavigate }) => {
               Logout
             </button>
 
-            {/* Hamburger - only on mobile */}
+            {/* Hamburger: phone + tablet (&lt; lg) */}
             <button
               type="button"
               onClick={() => setMobileMenuOpen((o) => !o)}
-              className={`sm:hidden rounded-lg p-2 transition-colors ${
+              className={`rounded-lg p-2 transition-colors lg:hidden ${
                 darkMode ? 'text-bridged-light hover:bg-bridged-light/10' : 'text-bridged-primary/80 hover:bg-bridged-primary/10'
               }`}
               aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
@@ -389,7 +389,7 @@ const MainLayout = ({ user, onLogout, children, currentPage, onNavigate }) => {
 
         {mobileMenuOpen && (
           <div
-            className={`sm:hidden border-t flex flex-col gap-1 px-4 py-3 ${
+            className={`flex max-h-[min(75vh,520px)] flex-col gap-1 overflow-y-auto overscroll-contain border-t px-4 py-3 lg:hidden ${
               darkMode
                 ? 'bg-bridged-primary border-bridged-teal/20'
                 : 'bg-white border-bridged-primary/10'
@@ -429,13 +429,13 @@ const MainLayout = ({ user, onLogout, children, currentPage, onNavigate }) => {
       />
 
       <main
-        className={`flex-1 ${
+        className={`min-h-0 min-w-0 flex-1 overflow-x-hidden ${
           darkMode
             ? 'bg-bridged-primary'
             : 'bg-gradient-to-b from-bridged-light/80 to-white'
         }`}
       >
-        <div className="px-2 sm:px-0">
+        <div className="min-w-0 px-2 sm:px-0">
           {children}
         </div>
       </main>

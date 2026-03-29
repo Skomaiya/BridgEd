@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { profileAPI, resumeAPI, paystackAPI } from '../api/api';
+import { profileAPI, resumeAPI, paystackAPI, authAPI } from '../api/api';
 import serverClient from '../api/api';
 import { useAlert } from '../context/GlobalAlertContext';
 
@@ -95,6 +95,8 @@ export default function SettingsPage({ user, onNavigate }) {
   const { showAlert } = useAlert();
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deletePwdReadOnly, setDeletePwdReadOnly] = useState(true);
 
   const isStudent = user?.role === 'student' || profile?.user?.role === 'student';
   const isEmployer = user?.role === 'employer' || profile?.user?.role === 'employer';
@@ -289,18 +291,28 @@ export default function SettingsPage({ user, onNavigate }) {
   };
 
   const handleDeleteAccount = async () => {
+    if (!deletePassword.trim()) {
+      showAlert('Enter your account password to confirm deletion.', 'Password required', 'error');
+      return;
+    }
     try {
       setSaving(true);
-      await serverClient.post("/auth/delete-account");
+      await authAPI.deleteAccount({ password: deletePassword });
       localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");
       localStorage.removeItem("user");
       window.location.href = "/";
     } catch (err) {
-      showAlert("Failed to delete account. Please try again or contact support.", "Critical Error", "error");
+      const msg =
+        err.response?.data?.error ||
+        (Array.isArray(err.response?.data?.password) ? err.response.data.password[0] : null) ||
+        'Failed to delete account. Please try again or contact support.';
+      showAlert(msg, 'Critical Error', 'error');
     } finally {
       setSaving(false);
       setShowDeleteModal(false);
+      setDeletePassword('');
+      setDeletePwdReadOnly(true);
     }
   };
 
@@ -700,7 +712,11 @@ export default function SettingsPage({ user, onNavigate }) {
               </p>
               <button
                  type="button"
-                 onClick={() => setShowDeleteModal(true)}
+                 onClick={() => {
+                   setDeletePassword('');
+                   setDeletePwdReadOnly(true);
+                   setShowDeleteModal(true);
+                 }}
                  disabled={saving}
                  className="px-6 py-2.5 rounded-lg border border-red-500 text-red-500 text-sm font-bold hover:bg-red-500 hover:text-white transition-all disabled:opacity-50"
               >
@@ -722,29 +738,62 @@ export default function SettingsPage({ user, onNavigate }) {
                   </div>
                 </div>
                 
-                <div className="p-6">
-                  <p className="text-sm text-bridged-primary/70 dark:text-bridged-light/70 mb-8 leading-relaxed">
+                <form
+                  className="p-6"
+                  autoComplete="off"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleDeleteAccount();
+                  }}
+                >
+                  <p className="text-sm text-bridged-primary/70 dark:text-bridged-light/70 mb-4 leading-relaxed">
                     Are you absolutely sure? This will permanently delete your BridgEd account and all data across the platform. This cannot be undone.
                   </p>
-                  
+                  <div className="mb-6">
+                    <label className={labelCls} htmlFor="delete-account-password">
+                      Enter your password to confirm
+                    </label>
+                    <input
+                      id="delete-account-password"
+                      name="account-deletion-password"
+                      type="password"
+                      autoComplete="new-password"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      readOnly={deletePwdReadOnly}
+                      onFocus={(e) => {
+                        setDeletePwdReadOnly(false);
+                        e.target.removeAttribute('readonly');
+                      }}
+                      data-1p-ignore
+                      data-lpignore="true"
+                      data-form-type="other"
+                      value={deletePassword}
+                      onChange={(e) => setDeletePassword(e.target.value)}
+                      className={inputCls}
+                    />
+                  </div>
                   <div className="flex gap-3">
                     <button
                       type="button"
-                      onClick={() => setShowDeleteModal(false)}
+                      onClick={() => {
+                        setShowDeleteModal(false);
+                        setDeletePassword('');
+                        setDeletePwdReadOnly(true);
+                      }}
                       className="flex-1 px-4 py-2.5 rounded-lg border border-bridged-primary/10 dark:border-bridged-light/10 text-sm font-semibold text-bridged-primary dark:text-bridged-light hover:bg-bridged-primary/5 dark:hover:bg-bridged-light/5 transition-colors"
                     >
                       Cancel
                     </button>
                     <button
-                      type="button"
-                      onClick={handleDeleteAccount}
+                      type="submit"
                       disabled={saving}
                       className="flex-1 px-4 py-2.5 rounded-lg bg-red-500 text-white text-sm font-bold hover:bg-red-600 shadow-lg shadow-red-500/20 transition-all disabled:opacity-50"
                     >
                       {saving ? 'Deleting...' : 'Yes, Delete'}
                     </button>
                   </div>
-                </div>
+                </form>
               </div>
             </div>
           )}

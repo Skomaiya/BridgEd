@@ -35,6 +35,7 @@ export default function MessagesPage({ user }) {
   const [reportError, setReportError] = useState('');
   const [reportSuccess, setReportSuccess] = useState(false);
   const [showReasonDropdown, setShowReasonDropdown] = useState(false);
+  const [reporting, setReporting] = useState(false);
   const dropdownRef = useRef(null);
   const { showAlert } = useAlert();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -239,10 +240,14 @@ export default function MessagesPage({ user }) {
   });
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden rounded-2xl border border-bridged-primary/10 dark:border-white/10 bg-white/80 dark:bg-bridged-primary/60 backdrop-blur-sm shadow-xl transition-colors">
+    <div className="mx-auto flex h-[min(100dvh,56rem)] w-full min-w-0 max-w-[1600px] flex-col overflow-hidden rounded-2xl border border-bridged-primary/10 bg-white/80 shadow-xl backdrop-blur-sm transition-colors dark:border-white/10 dark:bg-bridged-primary/60 lg:h-[calc(100dvh-5.5rem)] lg:flex-row">
 
-      <div className="flex w-full flex-col border-r border-bridged-primary/10 dark:border-white/10 sm:w-80 shrink-0 bg-bridged-primary/5 dark:bg-transparent">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-bridged-primary/10 dark:border-white/10">
+      <div
+        className={`flex min-h-0 shrink-0 flex-col border-bridged-primary/10 bg-bridged-primary/5 dark:border-white/10 dark:bg-transparent lg:border-r ${
+          selectedId ? 'hidden h-full w-full lg:flex lg:w-80' : 'flex h-full min-h-0 w-full flex-1'
+        }`}
+      >
+        <div className="flex shrink-0 items-center justify-between border-b border-bridged-primary/10 px-4 py-3 dark:border-white/10">
           <h2 className="text-base font-bold text-bridged-primary dark:text-white">
             Messages
             {totalUnread > 0 && (
@@ -253,14 +258,14 @@ export default function MessagesPage({ user }) {
           </h2>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
           {loadingConvs ? (
             <div className="flex items-center justify-center py-16">
               <div className="h-8 w-8 animate-spin rounded-full border-2 border-bridged-teal/30 border-t-bridged-teal" />
             </div>
           ) : visibleConversations.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center px-4">
-              <i className="fa-regular fa-comment-dots text-4xl text-white/20 mb-3" aria-hidden />
+            <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
+              <i className="fa-regular fa-comment-dots mb-3 text-4xl text-white/20" aria-hidden />
               <p className="text-sm text-white/40">
                 {user?.role === 'employer'
                   ? 'Start a conversation by messaging an accepted match from the Matches page.'
@@ -273,29 +278,42 @@ export default function MessagesPage({ user }) {
                 key={conv.conversation_id}
                 type="button"
                 onClick={() => handleSelectConversation(conv.conversation_id)}
-                className={`w-full text-left px-4 py-3 flex gap-3 items-start border-b border-bridged-primary/5 dark:border-white/5 transition-colors
-                  ${selectedId === conv.conversation_id
-                    ? 'bg-bridged-teal/10 dark:bg-bridged-teal/20 border-l-2 border-l-bridged-teal'
-                    : 'hover:bg-bridged-primary/5 dark:hover:bg-white/5'}`}
+                className={`flex w-full min-w-0 items-start gap-3 border-b border-bridged-primary/5 px-4 py-3 text-left transition-colors dark:border-white/5 ${
+                  selectedId === conv.conversation_id
+                    ? 'border-l-2 border-l-bridged-teal bg-bridged-teal/10 dark:bg-bridged-teal/20'
+                    : 'hover:bg-bridged-primary/5 dark:hover:bg-white/5'
+                }`}
               >
-                <div className="flex-shrink-0 h-10 w-10 rounded-full bg-bridged-teal/30 flex items-center justify-center text-bridged-teal font-bold text-sm">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-bridged-teal/30 text-sm font-bold text-bridged-teal">
                   {(conv.other_party_name || '?')[0].toUpperCase()}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <span className={`text-sm font-semibold truncate ${selectedId === conv.conversation_id ? 'text-bridged-teal' : 'text-bridged-primary dark:text-white'}`}>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <span
+                      className={`min-w-0 flex-1 break-words text-sm font-semibold leading-snug ${
+                        selectedId === conv.conversation_id
+                          ? 'text-bridged-teal'
+                          : 'text-bridged-primary dark:text-white'
+                      }`}
+                    >
                       {conv.other_party_name}
                     </span>
-                    <span className="text-[10px] text-bridged-primary/40 dark:text-white/30 ml-2 shrink-0 font-medium">
-                      {conv.last_message ?'Now' : ''}
+                    <span className="shrink-0 text-[10px] font-medium text-bridged-primary/40 dark:text-white/30">
+                      {conv.last_message?.sent_at ? formatTime(conv.last_message.sent_at) : ''}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between mt-0.5">
-                    <p className={`text-xs truncate max-w-[160px] ${conv.unread_count > 0 ? 'font-bold text-bridged-primary dark:text-white' : 'text-bridged-primary/50 dark:text-white/40'}`}>
+                  <div className="mt-0.5 flex items-start justify-between gap-2">
+                    <p
+                      className={`min-w-0 flex-1 break-words text-xs leading-snug line-clamp-2 ${
+                        conv.unread_count > 0
+                          ? 'font-bold text-bridged-primary dark:text-white'
+                          : 'text-bridged-primary/50 dark:text-white/40'
+                      }`}
+                    >
                       {conv.last_message?.body ?? 'No messages yet'}
                     </p>
                     {conv.unread_count > 0 && (
-                      <span className="ml-1 shrink-0 inline-flex items-center justify-center h-4 w-4 rounded-full bg-bridged-teal text-[10px] font-bold text-white shadow-sm">
+                      <span className="inline-flex h-5 min-w-[1.25rem] shrink-0 items-center justify-center rounded-full bg-bridged-teal px-1 text-[10px] font-bold text-white shadow-sm">
                         {conv.unread_count}
                       </span>
                     )}
@@ -307,19 +325,25 @@ export default function MessagesPage({ user }) {
         </div>
       </div>
 
-      <div className={`flex flex-1 flex-col ${selectedId ? 'flex' : 'hidden sm:flex'}`}>
+      <div
+        className={`flex min-h-0 min-w-0 flex-1 flex-col ${
+          selectedId ? 'flex' : 'hidden lg:flex'
+        }`}
+      >
         {!selectedId ? (
-          <div className="flex flex-1 flex-col items-center justify-center text-center p-8">
-            <i className="fa-regular fa-comment-dots text-5xl text-bridged-primary/10 dark:text-white/10 mb-4" aria-hidden />
-            <p className="text-bridged-primary/30 dark:text-white/30 text-sm font-medium">Select a conversation to start chatting</p>
+          <div className="flex flex-1 flex-col items-center justify-center p-8 text-center">
+            <i className="fa-regular fa-comment-dots mb-4 text-5xl text-bridged-primary/10 dark:text-white/10" aria-hidden />
+            <p className="text-sm font-medium text-bridged-primary/30 dark:text-white/30">
+              Select a conversation to start chatting
+            </p>
           </div>
         ) : (
           <>
-            <div className="flex items-center gap-3 px-4 py-3 border-b border-white/10 bg-white/5">
+            <div className="flex shrink-0 items-center gap-2 border-b border-white/10 bg-white/5 px-3 py-3 sm:gap-3 sm:px-4">
               <button
                 type="button"
                 onClick={() => setSelectedId(null)}
-                className="sm:hidden text-white/50 hover:text-white mr-1"
+                className="shrink-0 rounded-lg p-2 text-bridged-primary/60 hover:bg-bridged-primary/10 hover:text-bridged-primary lg:hidden dark:text-white/50 dark:hover:bg-white/10 dark:hover:text-white"
                 aria-label="Back to conversations"
               >
                 <i className="fa-solid fa-arrow-left" />
@@ -327,10 +351,12 @@ export default function MessagesPage({ user }) {
               <div className="h-9 w-9 rounded-full bg-bridged-teal/30 flex items-center justify-center text-bridged-teal font-bold text-sm">
                 {(selectedConv?.other_party_name || '?')[0].toUpperCase()}
               </div>
-              <div>
-                <p className="text-sm font-bold text-bridged-primary dark:text-white">{selectedConv?.other_party_name}</p>
-                <div className="flex items-center gap-1.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-bridged-teal" />
+              <div className="min-w-0 flex-1">
+                <p className="break-words text-sm font-bold leading-snug text-bridged-primary dark:text-white">
+                  {selectedConv?.other_party_name}
+                </p>
+                <div className="mt-0.5 flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-bridged-teal" />
                   <p className="text-[10px] font-medium uppercase tracking-wider text-bridged-primary/40 dark:text-white/40">
                     {user?.role === 'employer' ? 'Student' : 'Employer'}
                   </p>
@@ -478,7 +504,7 @@ export default function MessagesPage({ user }) {
               </div>
             )}
 
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-4 sm:px-4 space-y-3">
               {loadingMsgs ? (
                 <div className="flex justify-center py-8">
                   <div className="h-6 w-6 animate-spin rounded-full border-2 border-bridged-teal/30 border-t-bridged-teal" />
@@ -499,7 +525,7 @@ export default function MessagesPage({ user }) {
                   
                   return (
                     <div key={msg.message_id} className={`flex flex-col ${isMine ? 'items-end' : 'items-start'}`}>
-                      <div className={`group relative max-w-[85%] sm:max-w-[70%] rounded-2xl px-3.5 py-2.5 text-sm shadow-sm transition-all
+                      <div className={`group relative max-w-[min(92%,36rem)] sm:max-w-[75%] rounded-2xl px-3.5 py-2.5 text-sm shadow-sm transition-all
                         ${isMine
                           ? 'bg-bridged-teal text-white rounded-br-sm shadow-bridged-teal/10'
                           : 'bg-bridged-primary/5 dark:bg-white/10 text-bridged-primary dark:text-white/90 rounded-bl-sm border border-bridged-primary/5 dark:border-transparent'}`}

@@ -4,7 +4,7 @@ import { useNetworkStatus } from "../utils/networkStatus";
 import { getCached, setCached, CACHE_KEYS } from "../utils/offlineCache";
 
 const cardClass =
-  "rounded-xl border border-bridged-primary/10 dark:border-bridged-light/10 bg-white dark:bg-bridged-primary/30 p-4 text-bridged-primary dark:text-bridged-light";
+  "w-full min-w-0 rounded-xl border border-bridged-primary/10 dark:border-bridged-light/10 bg-white dark:bg-bridged-primary/30 p-4 text-bridged-primary dark:text-bridged-light";
 
 const TYPE_META = {
   new_match: { label: "New match", icon: "fa-briefcase", color: "text-bridged-teal" },
@@ -96,9 +96,9 @@ const NotificationsPage = ({ user, syncNotification }) => {
   const unreadCount = notifications.filter((n) => !n.is_read && isVisible(n)).length;
 
   return (
-    <div className="min-h-[60vh] w-full px-6 py-8">
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-        <div>
+    <div className="mx-auto min-h-[60vh] w-full min-w-0 max-w-[1600px] px-4 py-6 sm:px-6 md:py-8">
+      <div className="mb-6 flex flex-col gap-3 sm:mb-8 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+        <div className="min-w-0 flex-1">
           <h1 className="text-xl font-semibold text-bridged-primary dark:text-bridged-light">
             Notifications
           </h1>
@@ -110,7 +110,7 @@ const NotificationsPage = ({ user, syncNotification }) => {
           <button
             type="button"
             onClick={handleMarkAllRead}
-            className="rounded-lg border border-bridged-teal/40 px-3 py-1.5 text-sm font-medium text-bridged-teal hover:bg-bridged-teal/10"
+            className="w-full shrink-0 rounded-lg border border-bridged-teal/40 px-3 py-2 text-sm font-medium text-bridged-teal hover:bg-bridged-teal/10 sm:w-auto sm:py-1.5"
           >
             Mark all read
           </button>
@@ -150,7 +150,7 @@ const NotificationsPage = ({ user, syncNotification }) => {
           </div>
         </div>
       ) : (
-        <ul className="space-y-3">
+        <ul className="w-full min-w-0 space-y-3">
           {notifications.filter(isVisible).length === 0 ? (
             <div className={cardClass}>
               <div className="flex flex-col items-center gap-2 py-8 text-center">
@@ -171,22 +171,22 @@ const NotificationsPage = ({ user, syncNotification }) => {
                     : "opacity-75"
                 }`}
               >
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-2 flex items-center gap-2">
+                <div className="flex w-full min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                  <div className="min-w-0 w-full flex-1">
+                    <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1">
                       <i
-                        className={`fa-solid ${meta.icon} text-sm ${meta.color}`}
+                        className={`fa-solid ${meta.icon} shrink-0 text-sm ${meta.color}`}
                         aria-hidden
                       />
                       <span className="text-xs font-semibold uppercase tracking-wide text-bridged-primary/60 dark:text-bridged-light/50">
                         {meta.label}
                       </span>
                       {!n.is_read && (
-                        <span className="ml-auto inline-block h-2 w-2 rounded-full bg-bridged-teal shrink-0" />
+                        <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-bridged-teal sm:ml-1" />
                       )}
                     </div>
 
-                    <p className="text-sm leading-relaxed text-bridged-primary dark:text-bridged-light">
+                    <p className="break-words text-sm leading-relaxed text-bridged-primary [overflow-wrap:anywhere] dark:text-bridged-light">
                       {n.message}
                     </p>
 
@@ -204,7 +204,7 @@ const NotificationsPage = ({ user, syncNotification }) => {
                     <button
                       type="button"
                       onClick={() => handleMarkRead(n.notification_id)}
-                      className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium text-bridged-teal hover:bg-bridged-teal/10 dark:hover:bg-bridged-teal/20"
+                      className="w-full shrink-0 rounded-lg px-3 py-2 text-center text-xs font-medium text-bridged-teal hover:bg-bridged-teal/10 dark:hover:bg-bridged-teal/20 sm:w-auto sm:self-start sm:py-1.5"
                     >
                       Mark read
                     </button>

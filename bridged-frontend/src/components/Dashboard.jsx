@@ -233,26 +233,24 @@ const Dashboard = ({ user, refreshTrigger = 0, onNavigate }) => {
             ) : (
               <ul className="space-y-3">
                 {matches.map((m) => (
-                  <li key={m.match_id} className={cardClass}>
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div>
-                        <span className="font-medium text-bridged-primary dark:text-bridged-light">
-                          {m.student?.anonymized ? 'A student' : (m.student?.email ?? m.student?.user?.email ?? 'Student')}
-                        </span>
-                        <span className="mx-2 text-bridged-primary/50 dark:text-bridged-light/50">·</span>
-                        <span className="text-sm text-bridged-primary/70 dark:text-bridged-light/70">
-                          {m.job?.title ?? 'Job'}
-                        </span>
-                      </div>
-                      <span className="rounded-full bg-bridged-teal/20 px-2 py-0.5 text-sm font-medium text-bridged-teal">
+                  <li key={m.match_id} className={`${cardClass} flex flex-col gap-2`}>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-bridged-primary dark:text-bridged-light break-words">
+                        <span className="break-all">{m.student?.anonymized ? 'A student' : (m.student?.email ?? m.student?.user?.email ?? 'Student')}</span>
+                        <span className="mx-2 text-bridged-primary/50 dark:text-bridged-light/50 hidden sm:inline">·</span>
+                        <span className="block sm:inline mt-1 sm:mt-0 text-bridged-primary/70 dark:text-bridged-light/70">{m.job?.title ?? 'Job'}</span>
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className="rounded-full bg-bridged-teal/10 px-2.5 py-0.5 text-xs font-medium text-bridged-teal">
                         {typeof m.compatibility_score === 'number' ? Math.round(m.compatibility_score) : '—'}% match
                       </span>
+                      {m.matched_at && (
+                        <p className="text-xs text-bridged-primary/50 dark:text-bridged-light/50">
+                          Matched {new Date(m.matched_at).toLocaleDateString()}
+                        </p>
+                      )}
                     </div>
-                    {m.matched_at && (
-                      <p className="mt-1 text-xs text-bridged-primary/50 dark:text-bridged-light/50">
-                        Matched {new Date(m.matched_at).toLocaleDateString()}
-                      </p>
-                    )}
                   </li>
                 ))}
               </ul>

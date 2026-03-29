@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { matchAPI } from "../api/api";
+import { matchAPI, API_PAGE_SIZE } from "../api/api";
 import { useNetworkStatus } from "../utils/networkStatus";
 import { getCached, setCached, CACHE_KEYS } from "../utils/offlineCache";
 
@@ -55,7 +55,7 @@ const StudentMatchesPage = ({ user, onNavigate }) => {
       .then((data) => {
         const list = Array.isArray(data.matches) ? data.matches : [];
         setMatches(filterAcceptingMatches(list));
-        setTotalPages(data.count ? Math.ceil(data.count / 20) : 1);
+        setTotalPages(data.count ? Math.ceil(data.count / API_PAGE_SIZE) : 1);
         if (p === 1) setCached(CACHE_KEYS.student_match, data);
       })
       .catch((err) => {
