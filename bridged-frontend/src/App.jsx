@@ -16,6 +16,7 @@ import LandingPage from './components/LandingPage';
 import AboutPage from './components/AboutPage';
 import ContactPage from './components/ContactPage';
 import MessagesPage from './components/MessagesPage';
+import PrivacyPolicyPage from './components/PrivacyPolicyPage';
 import { profileAPI, paystackAPI } from './api/api';
 import { useNetworkStatus } from './utils/networkStatus';
 import { getCached, CACHE_KEYS, clearAll as clearOfflineCache } from './utils/offlineCache';
@@ -295,6 +296,9 @@ function App() {
 
     if (mainPage === 'about') return pageWrapper(
       <AboutPage onNavigate={setMainPage} darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
+    );
+    if (mainPage === 'privacy-policy') return pageWrapper(
+      <PrivacyPolicyPage onNavigate={setMainPage} darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
     );
     if (mainPage === 'contact') return pageWrapper(
       <ContactPage onNavigate={setMainPage} darkMode={darkMode} toggleDarkMode={toggleDarkMode} user={user} />

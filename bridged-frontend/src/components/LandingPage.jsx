@@ -237,8 +237,7 @@ const LandingPage = ({ onNavigate, darkMode, toggleDarkMode }) => {
             </div>
             <div className="flex flex-col gap-4">
               <span className="text-bridged-teal uppercase tracking-widest text-xs">Legal</span>
-              <a href="#" className="text-bridged-primary/70 dark:text-bridged-light/70 hover:text-bridged-teal transition">Privacy</a>
-              <a href="#" className="text-bridged-primary/70 dark:text-bridged-light/70 hover:text-bridged-teal transition">Terms</a>
+              <button onClick={() => onNavigate('privacy-policy')} className="text-bridged-primary/70 dark:text-bridged-light/70 hover:text-bridged-teal transition text-left">Privacy Policy</button>
             </div>
           </div>
         </div>
