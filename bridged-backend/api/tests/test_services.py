@@ -1,3 +1,6 @@
+import json
+from unittest.mock import patch
+
 import pytest
 from services.matching_engine import (
     MatchingEngine,
@@ -248,6 +251,8 @@ class TestMatchingEngineFilters:
 
     @pytest.fixture
     def employer(self, db):
+        from api.models import Employer, User
+
         eu = User.objects.create_user(
             email="emp@test.com", password="p", role="employer"
         )
@@ -264,7 +269,9 @@ class TestMatchingEngineFilters:
             user=su, location="Lagos", contract_preferences=["full-time"]
         )
         Resume.objects.create(
-            s, parsed_data={"technical_skills": ["Python"]}, status="completed"
+            student=s,
+            parsed_data={"technical_skills": ["Python"]},
+            status="completed",
         )
         return s
 
@@ -341,3 +348,200 @@ class TestMatchingEngineFilters:
         result = engine.calculate_match_for_student(st, job)
         assert result.get("failed_filter") is None
         assert result["score"] > 0
+
+
+@pytest.mark.django_db
+class TestMatchingEngineContextualLLM:
+    """Contextual LLM hook is invoked only when deterministic score warrants it."""
+
+    _llm_payload = {
+        "expertise_fit": 0.85,
+        "recommended_multiplier": 1.0,
+        "confidence": 0.9,
+        "relevant_experience_months": 12,
+        "rationale": "ok",
+    }
+
+    def test_llm_contextualizer_called_when_base_score_high(self, monkeypatch):
+        """Above MATCHING_LLM_MIN_BASE_SCORE, _llm_contextualize_match runs and can mark contextualized."""
+        from api.models import Employer, Job, Resume, Student, User
+
+        monkeypatch.setenv("MATCHING_CONTEXT_LLM_ENABLED", "true")
+        monkeypatch.delenv("MATCHING_LLM_MIN_BASE_SCORE", raising=False)
+
+        eu = User.objects.create_user(
+            email="llm-e@e.com", password="p", role="employer"
+        )
+        emp = Employer.objects.create(user=eu, company_name="LLM Co")
+        su = User.objects.create_user(email="llm-s@s.com", password="p", role="student")
+        st = Student.objects.create(
+            user=su, location="Remote", contract_preferences=["full-time"]
+        )
+        Resume.objects.create(
+            student=st,
+            parsed_data={"technical_skills": ["Python", "Django"]},
+            status="completed",
+        )
+        job = Job.objects.create(
+            employer=emp,
+            title="Python Dev",
+            description="Django API work",
+            required_skills=["Python", "Django"],
+            nice_to_have_skills=[],
+            location="Remote",
+            contract_type="full-time",
+        )
+        pd = {"technical_skills": ["Python", "Django"]}
+        engine = MatchingEngine()
+        with patch(
+            "services.matching_engine._llm_contextualize_match",
+            return_value=self._llm_payload,
+        ) as mock_llm:
+            result = engine.calculate_match_for_student(st, job, parsed_data=pd)
+        mock_llm.assert_called_once()
+        assert result.get("contextualized") is True
+        assert result.get("matcher_llm", {}).get("outcome") == "applied"
+        assert "expertise_fit" in result
+
+    def test_llm_contextualizer_skipped_when_base_score_low(self, monkeypatch):
+        """Below threshold, no LLM call — deterministic score only (saves latency)."""
+        from api.models import Employer, Job, Resume, Student, User
+
+        monkeypatch.setenv("MATCHING_CONTEXT_LLM_ENABLED", "true")
+        monkeypatch.delenv("MATCHING_LLM_MIN_BASE_SCORE", raising=False)
+
+        eu = User.objects.create_user(
+            email="llm2-e@e.com", password="p", role="employer"
+        )
+        emp = Employer.objects.create(user=eu, company_name="Co2")
+        su = User.objects.create_user(
+            email="llm2-s@s.com", password="p", role="student"
+        )
+        st = Student.objects.create(
+            user=su, location="Remote", contract_preferences=["full-time"]
+        )
+        Resume.objects.create(
+            student=st,
+            parsed_data={"technical_skills": ["Python"]},
+            status="completed",
+        )
+        job = Job.objects.create(
+            employer=emp,
+            title="Full stack",
+            description="Many skills",
+            required_skills=["Python", "Django", "React", "PostgreSQL"],
+            nice_to_have_skills=[],
+            location="Remote",
+            contract_type="full-time",
+        )
+        pd = {"technical_skills": ["Python"]}
+        engine = MatchingEngine()
+        with patch(
+            "services.matching_engine._llm_contextualize_match",
+            return_value=self._llm_payload,
+        ) as mock_llm:
+            result = engine.calculate_match_for_student(st, job, parsed_data=pd)
+        mock_llm.assert_not_called()
+        assert result.get("contextualized") is None
+        assert result.get("matcher_llm", {}).get("outcome") == "skipped_low_base"
+        assert result["score"] < 35
+
+
+class TestMatcherLLMCandidateSnapshot:
+    """LLM matcher receives a rebuilt snapshot: no student identity fields; role context included."""
+
+    def test_snapshot_omits_root_identity_fields_includes_work_context(self):
+        from services.matching_engine import _candidate_snapshot_for_llm_matcher
+
+        pd = {
+            "name": "Secret Student",
+            "email": "student@evil.test",
+            "phone": "+10000000000",
+            "technical_skills": ["Python", "Django"],
+            "soft_skills": ["Communication"],
+            "experience": [
+                {
+                    "title": "Backend Engineer",
+                    "company": "Acme Corp",
+                    "responsibilities": "Built REST APIs and deployments",
+                    "start_date": "2020-01",
+                    "end_date": "2021-06",
+                }
+            ],
+        }
+        snap = _candidate_snapshot_for_llm_matcher(pd)
+        blob = json.dumps(snap, ensure_ascii=True)
+        assert "Secret" not in blob
+        assert "student@evil" not in blob
+        assert "+10000000000" not in blob
+        assert "Acme Corp" in blob
+        assert "Backend Engineer" in blob
+        assert "REST APIs" in blob
+
+    @pytest.mark.django_db
+    def test_llm_request_json_excludes_root_identity_fields(self, monkeypatch):
+        """Integration: chat payload does not include name/email/phone from resume root."""
+        from unittest.mock import MagicMock
+
+        from api.models import Employer, Job, User
+
+        monkeypatch.setenv("MATCHING_CONTEXT_LLM_ENABLED", "true")
+        monkeypatch.delenv("MATCHING_LLM_MIN_BASE_SCORE", raising=False)
+
+        eu = User.objects.create_user(
+            email="pii-e@e.com", password="p", role="employer"
+        )
+        emp = Employer.objects.create(user=eu, company_name="E")
+        job = Job.objects.create(
+            employer=emp,
+            title="Dev",
+            description="Work",
+            required_skills=["Python"],
+            nice_to_have_skills=[],
+            location="Remote",
+            contract_type="full-time",
+        )
+        pd = {
+            "name": "Secret Person",
+            "email": "secret@user.com",
+            "phone": "555-0000",
+            "technical_skills": ["Python"],
+            "soft_skills": [],
+            "experience": [
+                {
+                    "title": "Engineer",
+                    "company": "Acme Corp",
+                    "responsibilities": "Shipped product features",
+                    "start_date": "2022-01",
+                    "end_date": "2023-01",
+                }
+            ],
+        }
+        mock_client = MagicMock()
+        mock_response = MagicMock()
+        mock_response.choices = [
+            MagicMock(
+                message=MagicMock(
+                    content='{"expertise_fit":1,"recommended_multiplier":1,"confidence":1,"relevant_experience_months":12,"rationale":"x"}'
+                )
+            )
+        ]
+        mock_client.chat.completions.create.return_value = mock_response
+
+        monkeypatch.setattr(
+            "services.matching_engine._get_context_llm_client", lambda: mock_client
+        )
+        monkeypatch.setenv("MATCHING_LLM_MODEL", "dummy-model")
+
+        from services.matching_engine import _llm_contextualize_match
+
+        _llm_contextualize_match(job, pd, 90.0)
+        kwargs = mock_client.chat.completions.create.call_args[1]
+        user_content = kwargs["messages"][1]["content"]
+        payload = json.loads(user_content)
+        cand = json.dumps(payload["candidate"])
+        assert "Secret Person" not in cand
+        assert "secret@user.com" not in cand
+        assert "555-0000" not in cand
+        assert "Acme Corp" in cand
+        assert "Engineer" in cand

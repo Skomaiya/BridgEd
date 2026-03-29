@@ -263,7 +263,7 @@ class TestDeleteAccount:
     URL = "api:delete-account"
 
     def test_user_can_delete_own_account(self, db):
-        """An authenticated user can delete their own account via POST."""
+        """An authenticated user can delete their own account with correct password."""
         from unittest.mock import patch
 
         user = User.objects.create_user(
@@ -275,11 +275,48 @@ class TestDeleteAccount:
         mock_sa = MagicMock()
         mock_sa.delete_supabase_user = MagicMock(return_value=None)
         with patch.dict(sys.modules, {"services.supabase_auth": mock_sa}):
-            response = client.post(reverse(self.URL))
-        assert response.status_code in (status.HTTP_200_OK, status.HTTP_204_NO_CONTENT)
+            response = client.post(
+                reverse(self.URL), {"password": "Securepass1"}, format="json"
+            )
+        assert response.status_code == status.HTTP_204_NO_CONTENT
         assert not User.objects.filter(email="del@test.com").exists()
+
+    def test_delete_requires_password_when_set(self, db):
+        """Password is required when the account has a usable password."""
+        from unittest.mock import patch
+
+        user = User.objects.create_user(
+            email="del2@test.com", password="Securepass1", role="student"
+        )
+        Student.objects.create(user=user)
+        client = APIClient()
+        client.force_authenticate(user=user)
+        mock_sa = MagicMock()
+        mock_sa.delete_supabase_user = MagicMock(return_value=None)
+        with patch.dict(sys.modules, {"services.supabase_auth": mock_sa}):
+            response = client.post(reverse(self.URL), {}, format="json")
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_delete_rejects_wrong_password(self, db):
+        """Wrong password returns 400 and does not delete the user."""
+        from unittest.mock import patch
+
+        user = User.objects.create_user(
+            email="del3@test.com", password="Securepass1", role="student"
+        )
+        Student.objects.create(user=user)
+        client = APIClient()
+        client.force_authenticate(user=user)
+        mock_sa = MagicMock()
+        mock_sa.delete_supabase_user = MagicMock(return_value=None)
+        with patch.dict(sys.modules, {"services.supabase_auth": mock_sa}):
+            response = client.post(
+                reverse(self.URL), {"password": "Wrongpass1"}, format="json"
+            )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert User.objects.filter(email="del3@test.com").exists()
 
     def test_unauthenticated_cannot_delete(self, db):
         """Unauthenticated delete attempt returns 401."""
-        response = APIClient().delete(reverse(self.URL))
+        response = APIClient().post(reverse(self.URL), {}, format="json")
         assert response.status_code == status.HTTP_401_UNAUTHORIZED

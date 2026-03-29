@@ -89,6 +89,24 @@ class TestMatchGeneration:
         assert response.status_code == status.HTTP_200_OK
         assert response.data["total_matches"] >= 1
 
+    def test_match_response_includes_contextual_matcher_stats(
+        self, student_client, student_with_resume, python_job
+    ):
+        """POST /match returns aggregated stats so clients can verify LLM usage."""
+        response = student_client.post(reverse(self.URL))
+        assert response.status_code == status.HTTP_200_OK
+        cm = response.data.get("contextual_matcher")
+        assert cm is not None
+        assert "contextual_llm_enabled" in cm
+        assert "min_base_score_for_llm" in cm
+        assert cm["jobs_evaluated"] >= 1
+        assert set(cm["outcomes"].keys()) >= {
+            "applied",
+            "skipped_low_base",
+            "skipped_disabled",
+            "unavailable",
+        }
+
     def test_matches_stored_in_database(
         self, student_client, student_with_resume, python_job
     ):

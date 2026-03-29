@@ -113,7 +113,6 @@ def pending_match(student_profile, employer_job):
 def existing_conversation(accepted_match, employer_profile, student_profile):
     """An existing Conversation between employer and student."""
     return Conversation.objects.create(
-        match=accepted_match,
         employer=employer_profile,
         student=student_profile,
     )
@@ -173,9 +172,51 @@ class TestStartConversation:
             "Two POSTs for the same match should return the same conversation_id, "
             f"but got {response1.data['conversation_id']} and {response2.data['conversation_id']}"
         )
-        assert Conversation.objects.filter(match=accepted_match).count() == 1, (
-            f"Expected exactly 1 Conversation for the match, "
-            f"found {Conversation.objects.filter(match=accepted_match).count()}"
+
+    def test_different_accepted_matches_same_student_reuse_one_conversation(
+        self, employer_client, employer_profile, student_profile, accepted_match
+    ):
+        """One DM thread per employer–student pair, regardless of which job/match opened it."""
+        r1 = employer_client.post(
+            reverse("api:conversation-list"),
+            {"match_id": str(accepted_match.match_id)},
+            format="json",
+        )
+        assert r1.status_code == status.HTTP_200_OK
+        conv_id = r1.data["conversation_id"]
+
+        other_job = Job.objects.create(
+            employer=employer_profile,
+            title="Data Analyst",
+            description="Analyze data.",
+            required_skills=["SQL"],
+            location="Remote",
+            is_open=True,
+        )
+        other_match = Match.objects.create(
+            student=student_profile,
+            job=other_job,
+            compatibility_score=88.0,
+            student_interested=True,
+            student_declined=False,
+        )
+        r2 = employer_client.post(
+            reverse("api:conversation-list"),
+            {"match_id": str(other_match.match_id)},
+            format="json",
+        )
+        assert r2.status_code == status.HTTP_200_OK
+        assert (
+            r2.data["conversation_id"] == conv_id
+        ), "A second accepted match with the same student should reuse the existing conversation."
+        assert (
+            Conversation.objects.filter(
+                student=student_profile, employer=employer_profile
+            ).count()
+            == 1
+        ), (
+            f"Expected exactly 1 Conversation for the pair, "
+            f"found {Conversation.objects.filter(student=student_profile, employer=employer_profile).count()}"
         )
 
     def test_employer_cannot_start_conversation_for_pending_match(

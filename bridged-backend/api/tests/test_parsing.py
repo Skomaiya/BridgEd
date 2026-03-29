@@ -9,11 +9,9 @@ Parsing tests — two levels:
     Skip gracefully when the folder is absent (e.g. on CI).
 """
 
-import os
-import sys
 import pytest
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from rest_framework import status
