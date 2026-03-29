@@ -182,9 +182,12 @@ const EmployerMatchesPage = ({ user, onNavigate }) => {
       .finally(() => setLoading(false));
   }, [isOnline, selectedJobId, shortlistPage]);
 
-  useEffect(() => {
+  const [prevSelectedJobId, setPrevSelectedJobId] = useState(selectedJobId);
+
+  if (selectedJobId !== prevSelectedJobId) {
+    setPrevSelectedJobId(selectedJobId);
     setShortlistPage(1);
-  }, [selectedJobId]);
+  }
 
   useEffect(() => {
     if (selectedJobId) {

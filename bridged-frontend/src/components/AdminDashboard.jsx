@@ -24,10 +24,14 @@ const AdminDashboard = ({ user, activeTab }) => {
   const [selectedJob, setSelectedJob] = useState(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [prevTab, setPrevTab] = useState(activeTab);
+  const [prevSearch, setPrevSearch] = useState(searchTerm);
 
-  useEffect(() => {
+  if (activeTab !== prevTab || searchTerm !== prevSearch) {
+    setPrevTab(activeTab);
+    setPrevSearch(searchTerm);
     setPage(1);
-  }, [activeTab, searchTerm]);
+  }
 
   useEffect(() => {
     fetchData();

@@ -77,6 +77,8 @@ const StudentMatchesPage = ({ user, onNavigate }) => {
       const data = await matchAPI.getMyMatches();
       const list = Array.isArray(data.matches) ? data.matches : [];
       setMatches(filterAcceptingMatches(list));
+      setPage(1);
+      setTotalPages(data.count ? Math.ceil(data.count / API_PAGE_SIZE) : 1);
       setCached(CACHE_KEYS.student_match, data);
       const count = filterAcceptingMatches(list).length;
       setFindMatchMsg(count > 0 ? `Found ${count} match${count !== 1 ? 'es' : ''}.` : 'No new matches found based on your current CV.');
