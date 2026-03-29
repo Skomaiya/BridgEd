@@ -200,10 +200,7 @@ const PrivacyPolicyPage = ({ onNavigate, darkMode, toggleDarkMode }) => {
                   <li><strong>Legitimate Interests:</strong> Processing for security monitoring and fraud prevention.</li>
                 </ul>
               </Sub>
-              <Sub id="s5-4" title="5.4 Breach Notification">
-                <p>In the event of a data breach compromising your personal data, we will notify affected users within 7 working days, and report the incident to the Nigeria Data Protection Commission (NDPC) within 72 hours, in strict accordance with the NDPA 2023.</p>
-              </Sub>
-              <Sub id="s5-5" title="5.5 Contact Information">
+              <Sub id="s5-4" title="5.4 Contact Information">
                 <p>If you have questions or complaints regarding this Policy please reach out to:<br />
                 <a href="mailto:[EMAIL_ADDRESS]" className="font-semibold text-bridged-teal hover:underline mt-2 inline-block">bridged@gmail.com</a></p>
               </Sub>
