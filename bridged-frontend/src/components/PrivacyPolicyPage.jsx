@@ -53,12 +53,14 @@ const PrivacyPolicyPage = ({ onNavigate, darkMode, toggleDarkMode }) => {
           >
             {darkMode ? <i className="fa-solid fa-sun" /> : <i className="fa-solid fa-moon" />}
           </button>
-          <img
-            src={darkMode ? '/images/logo-dark.png' : '/images/logo-light.png'}
-            alt="BridgEd"
-            className="h-8 w-auto object-contain cursor-pointer"
-            onClick={() => onNavigate?.('landing')}
-          />
+          <div className="flex items-center h-12 w-10 sm:w-28 overflow-visible">
+            <img
+              src={darkMode ? '/images/logo-dark.png' : '/images/logo-light.png'}
+              alt="BridgEd"
+              className="h-12 w-auto object-contain cursor-pointer origin-left scale-150 sm:scale-[2.5]"
+              onClick={() => onNavigate?.('landing')}
+            />
+          </div>
         </div>
       </header>
 

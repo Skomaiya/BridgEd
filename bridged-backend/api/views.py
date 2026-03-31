@@ -720,7 +720,7 @@ def _recompute_matches_for_job(job):
                         type="new match",
                         message=(
                             f"New match: Job '{job.title}' by {job.employer.company_name} "
-                            "now meets the strong match threshold after an update."
+                            "you now meets the strong match threshold after an update."
                         ),
                     )
             elif old_match:
@@ -730,7 +730,7 @@ def _recompute_matches_for_job(job):
                         type="match declined",
                         message=(
                             f"Match removal: Job '{job.title}' has been updated by the employer "
-                            "and no longer meets the minimum match threshold."
+                            "and you no longer meets the minimum match threshold."
                         ),
                     )
                 old_match.delete()
@@ -1080,9 +1080,8 @@ class MatchView(APIView):
                             user=match.job.employer.user,
                             type="student interested",
                             message=(
-                                f"({student_display}) has automatically accepted their match "
-                                f"for your position '{job.title}' based on their settings. "
-                                "Visit Matches to view their profile and download their CV."
+                                f"{student_display} has automatically accepted this match "
+                                f"for your position '{job.title}' Visit Matches to view their profile."
                             ),
                         )
                         Notification.objects.create(
@@ -1192,7 +1191,7 @@ class MatchView(APIView):
                         )
                         msg = (
                             f"You have {new_match_count} new job matches: {titles}{extra}. "
-                            "Head to Matches to review them and let employers know you're interested."
+                            "Head to Matches to review them and let employers know if you're interested."
                         )
                     Notification.objects.create(
                         user=student.user,
@@ -1273,7 +1272,7 @@ class IndicateInterestView(APIView):
                 type="student interested",
                 message=(
                     f"({student_display}) has accepted their match and is interested "
-                    f"in your position '{job_title}'. Visit Matches to view their profile and download their CV."
+                    f"in your position '{job_title}'. Visit Matches to view their profile."
                 ),
             )
 
@@ -1319,8 +1318,8 @@ class IndicateDeclineView(APIView):
                 user=request.user,
                 type="match declined",
                 message=(
-                    f"You've passed on '{match.job.title}' at {match.job.employer.company_name}. "
-                    "The match is still visible in case you change your mind — "
+                    f"You've passed on the '{match.job.title}' at {match.job.employer.company_name}. "
+                    "The match is still visible in case you change your mind, "
                     "you can accept it again as long as the position is still open."
                 ),
             )

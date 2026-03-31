@@ -199,7 +199,7 @@ const MainLayout = ({ user, onLogout, children, currentPage, onNavigate }) => {
             <img
               src={darkMode ? '/images/logo-dark.png' : '/images/logo-light.png'}
               alt="BridgEd"
-              className="h-8 w-auto max-h-9 max-w-[9.5rem] cursor-pointer object-contain object-left sm:max-w-[11rem] sm:max-h-10 lg:max-w-[12rem]"
+              className="h-12 w-auto object-contain cursor-pointer transition-transform origin-left scale-[2.5]"
               onClick={() => onNavigate?.(user?.role === 'admin' ? 'admin-dashboard' : 'dashboard')}
             />
           </div>
