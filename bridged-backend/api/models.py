@@ -377,6 +377,7 @@ class Notification(models.Model):
         ("new message", "New Message"),
         ("student interested", "Student Interested"),
         ("interest confirmed", "Interest Confirmed"),
+        ("employment confirmed", "Employment Confirmed"),
         ("match declined", "Match Declined"),
         ("job posted", "Job Posted"),
         ("job published", "Job Published"),
