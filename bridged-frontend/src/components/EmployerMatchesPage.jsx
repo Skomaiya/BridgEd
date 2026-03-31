@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+
+
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { employerAPI, jobsAPI, messagesAPI, statsAPI } from '../api/api';
 import ConfirmationModal from './ConfirmationModal';
 import { useNetworkStatus } from '../utils/networkStatus';
@@ -11,22 +13,24 @@ const cardClass =
 const EmployerMatchesPage = ({ user, onNavigate }) => {
   const { isOnline } = useNetworkStatus();
   const [matches, setMatches] = useState([]);
-  const [jobs, setJobs] = useState([]);          // all employer jobs for the overview grid
-  const [jobMatchCounts, setJobMatchCounts] = useState({}); // job_id -> count
+  const [jobs, setJobs] = useState([]);
+  const [jobMatchCounts, setJobMatchCounts] = useState({});
   const [loading, setLoading] = useState(true);
   const [profileMatchId, setProfileMatchId] = useState(null);
   const [profile, setProfile] = useState(null);
   const [profileLoading, setProfileLoading] = useState(false);
   const [downloadLoading, setDownloadLoading] = useState(null);
+  const [employLoading, setEmployLoading] = useState(null);
   const [selectedJobId, setSelectedJobId] = useState(null);
   const [shortlistPage, setShortlistPage] = useState(1);
   const [shortlistTotalPages, setShortlistTotalPages] = useState(1);
-  // Overview grid state
-  const [overviewFilter, setOverviewFilter] = useState('all'); // 'all' | 'matched'
+
+  const [overviewFilter, setOverviewFilter] = useState('all');
   const [overviewPage, setOverviewPage] = useState(1);
   const OVERVIEW_PAGE_SIZE = 9;
   const { showAlert } = useAlert();
   const [overviewStats, setOverviewStats] = useState(null);
+  const employInFlightRef = useRef(new Set());
 
   const SHORTLIST_PAGE_SIZE = 10;
 
@@ -92,13 +96,54 @@ const EmployerMatchesPage = ({ user, onNavigate }) => {
       confirmText: 'Yes, Employ',
       type: 'success',
       onConfirm: async () => {
+        if (match.status === 'employed') {
+          setConfirmModal(prev => ({ ...prev, isOpen: false }));
+          return;
+        }
+        if (employInFlightRef.current.has(match.match_id)) {
+          return;
+        }
+        employInFlightRef.current.add(match.match_id);
+        setEmployLoading(match.match_id);
         try {
           await employerAPI.employCandidate(match.match_id);
+          setMatches(prev =>
+            prev.map((m) =>
+              m.match_id === match.match_id ? { ...m, status: 'employed' } : m
+            )
+          );
+          if (selectedJobId) {
+            setJobs((prev) =>
+              prev.map((job) => {
+                if (job.job_id !== selectedJobId) return job;
+                const nextHired = Math.min(
+                  Number(job.recruitment_slots || 0),
+                  Number(job.hired_count || 0) + 1
+                );
+                return { ...job, hired_count: nextHired };
+              })
+            );
+          }
+          fetchMatchCounts();
           showAlert('Candidate employed successfully!', 'Success', 'success');
           setConfirmModal(prev => ({ ...prev, isOpen: false }));
         } catch (err) {
-          showAlert(err.response?.data?.error || 'Failed to employ candidate.', 'Error', 'error');
-          setConfirmModal(prev => ({ ...prev, isOpen: false }));
+          const errorMessage = err?.response?.data?.error || '';
+          if (String(errorMessage).toLowerCase().includes('already hired')) {
+            setMatches(prev =>
+              prev.map((m) =>
+                m.match_id === match.match_id ? { ...m, status: 'employed' } : m
+              )
+            );
+            setConfirmModal(prev => ({ ...prev, isOpen: false }));
+            showAlert('Candidate is already employed.', 'Success', 'success');
+          } else {
+            showAlert(errorMessage || 'Failed to employ candidate.', 'Error', 'error');
+            setConfirmModal(prev => ({ ...prev, isOpen: false }));
+          }
+        } finally {
+          employInFlightRef.current.delete(match.match_id);
+          setEmployLoading(null);
         }
       }
     });
@@ -115,6 +160,14 @@ const EmployerMatchesPage = ({ user, onNavigate }) => {
         try {
           await employerAPI.dismissCandidate(matchId);
           setMatches(prev => prev.filter(m => m.match_id !== matchId));
+          fetchMatchCounts();
+          if(isOnline) {
+            const params = selectedJobId ? { job_id: selectedJobId }: {};
+            statsAPI
+            .getEmployerMatchStats(params)
+            .then((data) => setOverviewStats(data))
+            .catch(() => {});
+          }
           showAlert('Candidate dismissed.', 'Success', 'success');
           setConfirmModal(prev => ({ ...prev, isOpen: false }));
         } catch (err) {
@@ -125,7 +178,7 @@ const EmployerMatchesPage = ({ user, onNavigate }) => {
     });
   };
 
-  // Fetch all employer jobs for the overview grid (independent of match pagination)
+  // Fetch all employer jobs for the overview grid
   const fetchJobs = useCallback(() => {
     if (!isOnline) return;
     jobsAPI.getMyJobs('', { page_size: 200 })
@@ -139,7 +192,6 @@ const EmployerMatchesPage = ({ user, onNavigate }) => {
   // Fetch match counts per job for the overview grid
   const fetchMatchCounts = useCallback(() => {
     if (!isOnline) return;
-    // Fetch all matches without pagination just for counting (use large page_size)
     employerAPI.getMatches({ page_size: 200 })
       .then((data) => {
         const list = Array.isArray(data.results) ? data.results : (Array.isArray(data) ? data : []);
@@ -153,7 +205,7 @@ const EmployerMatchesPage = ({ user, onNavigate }) => {
       .catch(() => setJobMatchCounts({}));
   }, [isOnline]);
 
-  // Fetch shortlist matches for a specific job (paginated)
+  // Fetch shortlist matches for a specific job
   const fetchShortlistMatches = useCallback(() => {
     if (!selectedJobId) return;
     setLoading(true);
@@ -222,6 +274,9 @@ const EmployerMatchesPage = ({ user, onNavigate }) => {
   }, [isOnline, selectedJobId]);
 
   const selectedJob = selectedJobId ? jobs.find(j => j.job_id === selectedJobId) : null;
+  const selectedJobTotalSlots = Number(selectedJob?.recruitment_slots || 0);
+  const selectedJobHiredCount = Number(selectedJob?.hired_count || 0);
+  const selectedJobRemainingSlots = Math.max(0, selectedJobTotalSlots - selectedJobHiredCount);
 
   return (
     <div className="mx-auto min-h-[60vh] w-full min-w-0 max-w-[1600px] px-4 py-6 sm:px-6 md:py-8">
@@ -303,9 +358,16 @@ const EmployerMatchesPage = ({ user, onNavigate }) => {
               <h2 className="break-words text-lg font-bold leading-snug text-bridged-primary dark:text-bridged-light">
                 {selectedJob?.title || 'Job Shortlist'}
               </h2>
-              <p className="mt-0.5 text-xs text-bridged-primary/60 dark:text-bridged-light/60">
-                Shortlist candidates
-              </p>
+              <div className="mt-0.5 space-y-1">
+                <p className="text-xs text-bridged-primary/60 dark:text-bridged-light/60">
+                  Shortlist candidates
+                </p>
+                {selectedJob && (
+                  <p className="text-xs font-medium text-bridged-primary/70 dark:text-bridged-light/70">
+                    Hiring slots: {selectedJobRemainingSlots} remaining ({selectedJobHiredCount}/{selectedJobTotalSlots} filled)
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 
@@ -389,10 +451,11 @@ const EmployerMatchesPage = ({ user, onNavigate }) => {
                             <>
                               <button
                                 type="button"
+                                disabled={employLoading === m.match_id || selectedJobRemainingSlots <= 0}
                                 onClick={() => handleEmploy(m)}
-                                className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-700 shadow-lg shadow-emerald-500/20"
+                                className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-700 shadow-lg shadow-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-60"
                               >
-                                Employ
+                                {employLoading === m.match_id ? 'Employing...' : selectedJobRemainingSlots <= 0 ? 'No Slots Left' : 'Employ'}
                               </button>
                               <button
                                 type="button"
@@ -623,6 +686,7 @@ const EmployerMatchesPage = ({ user, onNavigate }) => {
         message={confirmModal.message}
         confirmText={confirmModal.confirmText}
         type={confirmModal.type}
+        loading={Boolean(employLoading)}
         onConfirm={confirmModal.onConfirm}
         onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
       />

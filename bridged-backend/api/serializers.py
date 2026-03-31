@@ -425,6 +425,8 @@ class JobListSerializer(serializers.ModelSerializer):
             "contract_type",
             "job_length",
             "required_skills",
+            "recruitment_slots",
+            "hired_count",
             "is_open",
             "published_at",
             "application_deadline",

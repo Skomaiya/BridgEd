@@ -1344,7 +1344,7 @@ class EmployerMatchesView(generics.ListAPIView):
         qs = Match.objects.filter(
             job__employer__user=self.request.user,
             student_declined=False,
-        )
+        ).exclude(status="dismissed")
         job_id = self.request.query_params.get("job_id")
         if job_id:
             qs = qs.filter(job_id=job_id)
@@ -1367,6 +1367,7 @@ class EmployerMatchesView(generics.ListAPIView):
                         "job_id": str(m.job.job_id),
                         "title": m.job.title,
                     },
+                    "status": m.status,
                     "is_open": m.job.is_open,
                     "application_deadline": m.job.application_deadline,
                     "compatibility_score": m.compatibility_score,
@@ -1404,7 +1405,7 @@ class EmployerMatchStatsView(APIView):
         tags=["Employer"],
     )
     def get(self, request):
-        qs = Match.objects.filter(job__employer__user=request.user)
+        qs = Match.objects.filter(job__employer__user=request.user).exclude(status="dismissed")
         job_id = request.query_params.get("job_id")
         if job_id:
             qs = qs.filter(job_id=job_id)
@@ -2259,10 +2260,7 @@ class EmployMatchView(APIView):
             )
 
         if match.status == "employed":
-            return Response(
-                {"error": "Candidate already hired."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return Response(MatchSerializer(match).data, status=status.HTTP_200_OK)
 
         job = match.job
         if job.hired_count >= job.recruitment_slots:
@@ -2281,8 +2279,8 @@ class EmployMatchView(APIView):
 
         Notification.objects.create(
             user=match.student.user,
-            type="interest confirmed",
-            message=f"Congratulations! {job.employer.company_name} has employed you for the role of {job.title}.",
+            type="employment confirmed",
+            message=f"Congratulations! You have been employed for the role of {job.title} at {job.employer.company_name}.",
         )
 
         return Response(MatchSerializer(match).data)
@@ -2445,3 +2443,4 @@ class MessageListView(APIView):
         message.save(update_fields=["body", "edited_at"])
 
         return Response(MessageSerializer(message).data)
+    

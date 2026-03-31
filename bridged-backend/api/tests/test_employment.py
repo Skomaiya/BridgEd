@@ -67,7 +67,7 @@ class TestEmploymentDismissal:
         assert open_job.is_open is True
 
         assert Notification.objects.filter(
-            user=student_user, type="interest confirmed"
+            user=student_user, type="employment confirmed"
         ).exists()
 
     def test_job_closes_when_filled(

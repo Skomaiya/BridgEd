@@ -9,6 +9,7 @@ const cardClass =
 const TYPE_META = {
   new_match: { label: "New match", icon: "fa-briefcase", color: "text-bridged-teal" },
   student_interested: { label: "Student interested", icon: "fa-user-check", color: "text-green-500" },
+  'employment confirmed': { label: "Employment confirmed", icon: "fa-circle-check", color: "text-green-500" },
   interest_confirmed: { label: "Match accepted", icon: "fa-circle-check", color: "text-green-500" },
   match_declined: { label: "Match declined", icon: "fa-circle-xmark", color: "text-amber-500" },
   job_posted: { label: "Job posted", icon: "fa-file-circle-plus", color: "text-bridged-teal" },
