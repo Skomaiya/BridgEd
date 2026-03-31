@@ -130,18 +130,24 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # CORS & CSRF settings
-CORS_ALLOWED_ORIGINS = config(
-    "CORS_ALLOWED_ORIGINS",
-    default="http://localhost:5173",
-    cast=Csv(),
-)
+CORS_ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in config(
+        "CORS_ALLOWED_ORIGINS",
+        default="http://localhost:5173",
+        cast=Csv(),
+    )
+]
 CORS_ALLOW_CREDENTIALS = True
 
-CSRF_TRUSTED_ORIGINS = config(
-    "CSRF_TRUSTED_ORIGINS",
-    default="http://localhost:5173",
-    cast=Csv(),
-)
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in config(
+        "CSRF_TRUSTED_ORIGINS",
+        default="http://localhost:5173",
+        cast=Csv(),
+    )
+]
 
 # REST Framework settings
 REST_FRAMEWORK = {
