@@ -1,0 +1,93 @@
+BridgEd Platform — Privacy Policy
+Effective Date: March 30, 2026
+
+Your Privacy Matters
+BridgEd’s mission is to connect talented university students with forward-thinking employers to foster productive industrial placements. Central to this mission is our commitment to be transparent about the data we collect about you, how it is used, and with whom it is shared.
+
+This Privacy Policy applies when you use our Services. We offer our users choices about the data we collect, use, and share as described in this Policy. 
+
+Introduction
+We are a platform connecting students and employers in Nigeria. Our Privacy Policy applies to any Member (a registered Student or Employer).
+
+Changes
+We can modify this Privacy Policy. If we make material changes to it, we will provide active notice through our Services, or by other means, to provide you the opportunity to explicitly review and accept the changes before they become effective. 
+
+1. Data We Collect
+
+1.1 Data You Provide To Us
+Registration
+To create an account, you must provide data including your name, email address, password, and account type (Student or Employer). If an employer registers for premium placement services, they provide billing information.
+
+Profile and Resumes
+You create your BridgEd profile. Students provide education, work experience, and skills, and can upload CVs/resumes. Employers provide company details and job listings. 
+
+1.2 Service Use & Automatically Collected Data
+We log usage data when you visit or otherwise use our Services. Our servers automatically log standard web requests (IP addresses, browser versions, operating systems) for temporary security monitoring and crash diagnostics. 
+
+1.3 Cookies and Local Storage
+We do not use tracking cookies for advertising. BridgEd functions as a Progressive Web App (PWA) and uses your browser's local storage strictly to temporarily cache system data so the application functions efficiently in low bandwidth areas.
+
+2. How We Use Your Data
+We use your data to provide, support, personalize, and develop our Services. 
+
+2.1 Services & AI Matching
+We use your data to authorize access to our Services. For students, when you explicitly consent and upload a resume, BridgEd uses automated Large Language Models (LLMs) to scan the document and extract skills. We also utilize a secondary LLM specifically dedicated to match processing. Rather than making subjective or biased hiring judgments, this model performs an objective comparison, evaluating the meaning and context of a student's extracted skills against the specific requirements set by an employer. Returning a "compatibility score" indicating the compatibility percentage. This score determines how highly a student ranks in an employer's dashboard. This is an automated suggestion, not a final hiring decision.
+
+2.2 Communications
+We will contact you through the website notifications regarding service availability, security, match alerts, or system updates. 
+
+2.3 Security and Investigations
+We use your data for security purposes or to investigate possible fraud, violations of our agreements, or attempts to harm our Members.
+
+3. How We Share Information
+
+3.1 Between Members
+A student's full identity, contact details, and resume are shared with an employer only when a student actively accepts a match offer for a job.
+
+3.2 Service Providers
+We use others to help us provide our Services. They will have access to your information as reasonably necessary to perform these tasks on our behalf:
+- Hosting Providers: Render (Web Server) and Supabase (Database). Both securely host our backend infrastructure.
+- AI Processing: Hugging Face Inference APIs are utilized exclusively to extract text and skills from resumes, and a secondary LLM for calculating compatibility matches. They do not use your data to train their public models.
+- Payment Gateway: Paystack securely processes employer billing. We do not store credit card numbers.
+
+3.3 Legal Disclosures
+We may need to disclose information about you when required by Nigerian law, subpoena, or other legal process.
+
+3.4 Change in Control or Sale
+We can also share your personal data as part of a sale, or change in business control.
+
+4. Your Choices & Obligations
+
+4.1 Data Retention
+We keep most of your personal data as long as your account is open. Upon account deletion, all personal identifiers and resumes are permanently removed from our databases within 30 days. Automatically collected server logs are cleared within 90 days.
+
+4.2 Rights to Access and Control Your Personal Data (NDPA 2023)
+Under the Nigeria Data Protection Act (NDPA) 2023, you have the right to:
+- Access & Portability: Learn what data we hold and request a machine-readable copy.
+- Change or Correct Data: Edit your profile directly.
+- Delete Data (Erasure): Ask us to erase your personal data by closing your account.
+- Withdraw Consent: Revoke your consent for AI processing at any time without losing access to manual platform features.
+- Object: Object to automated decision-making and request manual review of matches.
+
+4.3 Account Closure
+If you close your account, your personal data will generally stop being visible to others on our Services within 24 hours.
+
+5. Other Important Information
+
+5.1 Security
+We implement security safeguards designed to protect your data. All web traffic is secured with TLS/HTTPS (Encryption in Transit). Passwords are irreversibly protected via Cryptographic Hashing. Our Supabase databases are encrypted at the storage level (Encryption at Rest).
+
+5.2 Cross-Border Data Transfers
+As we utilize global cloud hosting providers, your data may be transferred to servers in the USA or EU. We safeguard these transfers using standard compliance certifications to protect your information abroad.
+
+5.3 Lawful Bases for Processing
+We will only collect and process personal data about you where we have lawful bases:
+- Contractual Necessity: Processing necessary to perform our contract with you (e.g., logging you in, providing core placement functions).
+- Consent: Where we process data based on consent (such as AI resume parsing), we ask for your explicit consent at the point of action. You may withdraw it at any time.
+- Legitimate Interests: Processing for security monitoring and fraud prevention.
+
+5.4 Breach Notification
+In the event of a data breach compromising your personal data, we will notify affected users within 7 working days, and report the incident to the Nigeria Data Protection Commission (NDPC) within 72 hours, in strict accordance with the NDPA 2023.
+
+5.5 Contact Information
+If you have questions or complaints regarding this Policy please reach out to: bridged@gmail.com
