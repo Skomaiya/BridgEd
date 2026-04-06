@@ -661,7 +661,8 @@ class MatchingEngine:
         llm_contribution = context["expertise_fit"] * 100 * 0.60
         adjusted = keyword_contribution + llm_contribution
         
-        adjusted *= (0.9 + (context["recommended_multiplier"] - 0.6) * 0.2 / 0.5) if context["recommended_multiplier"] != 1.0 else 1.0
+        precision_adjustment = 0.9 + (context["recommended_multiplier"] - 0.6) * (0.2 / 0.5)
+        adjusted *= precision_adjustment if context["recommended_multiplier"] != 1.0 else 1.0
         
         if _is_likely_senior_job(job):
             weak_experience = context["relevant_experience_months"] < 24
