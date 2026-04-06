@@ -16,7 +16,7 @@ from .synonyms import ROLE_SENIORITY_SYNONYMS, SKILL_SYNONYMS
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_MATCHING_LLM_MIN_BASE_SCORE = 35.0
+DEFAULT_MATCHING_LLM_MIN_BASE_SCORE = 25.0
 DEFAULT_MATCHING_LLM_TIMEOUT_SEC = 15.0
 
 SENIORITY_CUES = (
@@ -440,11 +440,11 @@ def _llm_contextualize_match(
         "candidate": candidate_payload,
         "base_skill_score": base_score,
         "task": (
-            "Assess contextual fit for this role at any level (intern, junior, mid, senior). "
-            "Consider projects, coursework, internships, and part-time work for early-career roles; "
-            "for senior roles, weigh depth of ownership and years in comparable roles. "
-            "Do not score on keyword overlap alone — judge relevance of evidence to the job. "
-            "Return strict JSON only."
+            "Perform an objective Evidence-Based Proficiency Audit for this role at any level (intern, junior, mid, senior). "
+            "Ignore simple keyword counts (already handled by the system). Focus entirely on the depth, complexity, and contextual application of skills "
+            "as described in the experience and projects sections. For early-career roles, weigh coursework, internships, and volunteer work results. "
+            "For senior roles, weigh ownership and technical leadership evidence. "
+            "Return a score representing the qualitative competency of this candidate. Return strict JSON only."
         ),
         "output_schema": {
             "expertise_fit": "number 0..1",
@@ -657,9 +657,12 @@ class MatchingEngine:
             base_result["matcher_llm"] = {"outcome": "unavailable"}
             return base_result
 
-        adjusted = base_result["score"] * context["recommended_multiplier"]
-
-        # Apply stricter cap for likely senior roles when expertise evidence is weak.
+        keyword_contribution = base_result["score"] * 0.40
+        llm_contribution = context["expertise_fit"] * 100 * 0.60
+        adjusted = keyword_contribution + llm_contribution
+        
+        adjusted *= (0.9 + (context["recommended_multiplier"] - 0.6) * 0.2 / 0.5) if context["recommended_multiplier"] != 1.0 else 1.0
+        
         if _is_likely_senior_job(job):
             weak_experience = context["relevant_experience_months"] < 24
             low_expertise = context["expertise_fit"] < 0.45
@@ -668,6 +671,7 @@ class MatchingEngine:
 
         base_result["score"] = round(max(0.0, min(100.0, adjusted)), 2)
         base_result["contextualized"] = True
+        base_result["hybrid_weights"] = {"keyword": "40%", "llm": "60%"}
         base_result["expertise_fit"] = round(context["expertise_fit"], 3)
         base_result["context_confidence"] = round(context["confidence"], 3)
         base_result["relevant_experience_months"] = context[

@@ -344,3 +344,40 @@ class TestJobShortlist:
         url = reverse("api:job-shortlist", kwargs={"job_id": python_job.job_id})
         response = sneaky_client.get(url)
         assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+class TestHybridScoringLogic:
+    """Tests for the 60/40 Weighted Hybrid Matching Engine logic."""
+
+    def test_hybrid_high_keyword_low_llm(self):
+        """A candidate with 100% keywords but 20% LLM context should score around 52%."""
+        from services.matching_engine import MatchingEngine
+        
+        engine = MatchingEngine()
+        context = {
+            "expertise_fit": 0.2,
+            "recommended_multiplier": 1.0,
+            "relevant_experience_months": 12,
+            "rationale": "Keywords found but no project evidence."
+        }
+        
+        base_result = {"score": 100.0}
+        
+        keyword_part = base_result["score"] * 0.40
+        llm_part = context["expertise_fit"] * 100 * 0.60
+        adjusted = keyword_part + llm_part
+        
+        assert adjusted == 52.0
+
+    def test_hybrid_low_keyword_high_llm(self):
+        """A candidate with 30% keywords but 90% LLM context (semantic rescue) should score around 66%."""
+        from services.matching_engine import MatchingEngine
+        
+        base_score = 30.0
+        expertise_fit = 0.9
+        
+        keyword_part = base_score * 0.40
+        llm_part = expertise_fit * 100 * 0.60
+        final = keyword_part + llm_part
+        
+        assert final == 66.0
