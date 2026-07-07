@@ -92,7 +92,7 @@ const AboutPage = ({ onNavigate, darkMode, toggleDarkMode }) => {
             <h2 className="text-3xl font-bold mb-8">Guided by Vision</h2>
             <div className="p-12 rounded-[2.5rem] bg-gradient-to-br from-bridged-teal to-bridged-teal/80 text-white shadow-2xl shadow-bridged-teal/30">
               <p className="text-2xl font-medium italic leading-relaxed">
-                "To become the digital standard for internship excellence, empowering the next generation of Nigerian professionals through data-driven placements."
+                "To become the digital standard for excellence, empowering the next generation of young professionals through data-driven placements."
               </p>
             </div>
           </section>
